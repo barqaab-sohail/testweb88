@@ -1,0 +1,22 @@
+@charset "utf-8";
+.border1 {
+	border: 1px solid #CCCCCC;
+}
+.bodytext1 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	color: #000000;
+	line-height: 16px;
+}
+.bodytext2 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 10px;
+	color: #CCCCCC;
+	line-height: 16px;
+}
+.header1 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #000000;
+}

@@ -1,0 +1,102 @@
+<?php
+
+namespace App\Http\Controllers\Frontend;
+
+use App\Http\Requests;
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Input;
+use App\Models\DomainPricingList;
+use App\Models\DomainPricing;
+use App\Models\Plans;
+use App\Models\Plan;
+use DB;
+class DomainConfigurationControllers extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\View\View
+     */
+    function __construct() {
+
+	}
+
+	public function index(Request $request)
+	{
+		
+		$domain_availblity = [];
+		$err = 0;
+		if(null !== $request->input('search_domain'))
+		{
+			$domain_availblity = $this->check_domain_availablity($request->input('search_domain'));
+			if (preg_match('/[\'^£$%&*()}{#~?><>,|=_+¬-]/', $request->input('search_domain')))
+			{
+				$err = 1;
+			}
+		}
+		
+        return view('frontend.domain_configuration_hosting', ['response' => $domain_availblity, 'err_preg' => $err]);
+	}
+
+	public function check_domain_availablity($search_domain){
+        $search_domain = trim($search_domain);
+        $domain_availblity = $this->singleSearch($search_domain);
+        return $domain_availblity;
+	}
+
+    private function singleSearch($domain)
+    {
+        $success = array();
+        $error = array();
+        $available = "";
+        $taken = "";
+        $bulk = trim($domain);
+        $bulk = str_replace("www.", "", $bulk);
+        $domianExt = explode(".", $bulk, 2);
+        $bulk = $this->validateUserDomainSearchInput($bulk);
+		$price_list = $this->get_domain_price($domianExt[1]);
+        $result = [];
+        if (!empty($bulk)) {
+            $resp = (new DomainsController)->checkDomainAPI($bulk);
+            if ($resp[0] == 0) {
+                $success[$bulk] = ['status' => $resp[0]];
+                $success[$bulk] = (object)$success[$bulk];
+                $available = "$bulk";
+
+            } else {
+                $error[$bulk] = [
+                    'status' => $resp[0]
+                ];
+                $error[$bulk] = (object)$error[$bulk];
+                $taken = "$bulk";
+            }
+        }
+        return (object)['success' => $success, 'error' => $error, 'available' => $available, 'taken' => $taken, 'price_list' => $price_list];
+    }
+
+    private function validateUserDomainSearchInput($domain)
+    {
+        $spaces = '/\s/';
+        $noneUrlChars = '/[!\@\[#$%^&*()+?<>=~\,\?\`\?\;\'\"|_\{\\\}]/';
+        $domain = preg_replace($spaces, '', $domain);
+        $domain = strtolower(preg_replace($noneUrlChars, '', $domain));
+        $domainName = strstr($domain, '.', true);
+        if ($domainName == false) {
+            $domainName = $domain;
+            $domainTld = 'com';
+        } else {
+            $domainTld = str_replace($domainName . '.', '', $domain);
+        }
+
+        //check if such tld exist in Database
+        $tldExist = DomainPricingList::where('tld', $domainTld)->first();
+        $domainTld = $tldExist ? $domainTld : 'com';
+        return $domainName . '.' . $domainTld;
+    }
+	
+	function get_domain_price($domianExt)
+	{
+		return DB::table('domain_pricing_lists')->where('tld', $domianExt)->first();
+	}
+}

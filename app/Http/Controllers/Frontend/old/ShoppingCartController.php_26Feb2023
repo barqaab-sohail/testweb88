@@ -1,0 +1,612 @@
+<?php
+
+namespace App\Http\Controllers\Frontend;
+
+use App\Http\Requests;
+use App\Http\Controllers\Controller;
+
+use App\Models\Cartitem;
+use App\Models\User;
+use App\Models\State;
+use App\Models\City;
+use App\Models\PageCms;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
+//use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Input;
+use App\Models\DomainPricing; // For index page domain pricing || Added by mrloffel
+use App\Models\DomainPricingList; // For index page domain pricing || Added by mrloffel
+use Carbon\Carbon; // For transfer login page || Added by mrloffel
+use Illuminate\Support\Facades\Validator;
+use Session;
+use Storage;
+use Auth;
+use Response;
+use App\Libs\Transport;
+use App\Models\UserAdditional;
+use App\Models\UserBilling;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\PlanFeature;
+use App\Models\Plan;
+use App\Models\PaymentMethod;
+use App\Models\domain;
+use DB;
+use Log;
+
+class ShoppingCartController extends Controller
+{
+	public function index(Request $request)
+	{
+		// print "<pre>";print_r($request->all());exit;
+		$info = "";
+		$page = "";
+
+		if ($request->has('page')) {
+			$page = $request->page;
+		}
+		if ($request->has('info')) {
+			$info = $request->info;
+		}
+		$server_configuration_details = $request->server_configuration_details;
+		// $cartitems 		 = Cartitem::with('user')->where('user_id', Auth::id())->get()->toArray();
+
+		$domain_pricings = DomainPricing::where('type', 'addons')->where('status', '1')->get();
+		// $cart = session()->get('cart');
+		// unset($cart);
+		//       session()->put('cart', []);
+
+		$cartitems = [];
+		$cart = session('cart');
+
+	
+
+
+		if (session('cart')) {
+			$i = 0;
+			foreach (session('cart') as $key => $value) {
+				//exception data
+				if(!in_array($key, ['discount', 'total_price'])){
+					// $cartitems[$i]['services'] 	= $key;
+					// $cartitems[$i]['cycle']    	= @$value['cycle'];
+					// $cartitems[$i]['qty']      	= @$value['qty'];
+					// $cartitems[$i]['price']    	= @$value['price'];
+					// $cartitems[$i]['plan_id']   = @$value['plan_id'];
+					// $cartitems[$i]['page']   	= @$value['page'];
+					// $cartitems[$i]['type']		= @$value['type'];
+					// $cartitems[$i]['domain_cycle'] = @$value['domain_cycle'];
+					// $cartitems[$i]['domain_price'] = @$value['domain_price'];
+
+					$cartitems[$i]['services'] 	= $key;
+					 $cartitems[$i]['cycle']    	= @$value['cycle'];
+				      $cartitems[$i]['qty']      	= @$value['qty'];
+					$cartitems[$i]['price']    	= @$value['price'];
+					$cartitems[$i]['plan_id']   = @$value['plan_id'];
+					 $cartitems[$i]['page']   	= @$value['page'];
+					 $cartitems[$i]['type']		= @$value['type'];
+					 $cartitems[$i]['domain_cycle'] = @$value['domain_cycle'];
+					 $cartitems[$i]['domain_price'] = @$value['domain_price'];
+
+					
+					if (isset($value['addons']))
+						$cartitems[$i]['addons'] = @$value['addons'];
+					$i++;
+				}
+			}
+		}
+		// print "<pre>";print_r($cartitems);exit("here");
+		$domain = $request->search_domain;
+		$server_configuration_details =  json_decode($server_configuration_details);
+		//		dd($server_configuration_details,$request->all());
+		return view('frontend.shopping_cart', compact('domain', 'server_configuration_details', 'cartitems', 'domain_pricings', 'info', 'page', 'plans', 'data', 'featured_plans'));
+	}
+
+	public function checkoutItems(Request $request)
+	{
+		$form_data = $request->all();
+		if (empty($form_data['domain-name'])) {
+			return $this->index($request);
+		}
+		$plan_id = '';
+		foreach ($form_data['domain-name'] as $domain) {
+			$addons = [];
+			$price_cycle = $form_data['domain-price-cycle'][$domain];
+			$price_cycle = explode('|', $price_cycle);
+			$price = $price_cycle[1];
+			$cycle = $price_cycle[0];
+			if (!empty($form_data['plan_id'][$domain])) {
+				$plan_id = $form_data['plan_id'][$domain];
+				$plan_details = Plan::where('id', $plan_id)->first();
+				$price = $plan_details->price_annually + $plan_details->setup_fee_one_time + $price;
+			}
+			if (!empty($form_data['domain-addon'][$domain])) {
+				$addons = $form_data['domain-addon'][$domain];
+				$addons = implode(',', $addons);
+			}
+			$type = $form_data['type'][$domain];
+			$id = $domain;
+			$cart = session()->get('cart');
+			$cart_data = [
+				'price'	 	=> $price_cycle[1],
+				'cycle'	 	=> $price_cycle[0],
+				'addons' 	=> $addons,
+				'plan_id' 	=> $plan_id,
+				'qty'		=> 1,
+				'page' 		=> '',
+				'type'		=> $type
+			];
+
+			// $cart[$id]["price"] = $price;
+			// $cart[$id]["plan_id"]	= $plan_id;
+			// $cart[$id]["addons"]	= $addons;
+			// $cart[$id]["cycle"]  = $cycle;
+			if (!$cart) {
+
+				$cart = [$id => $cart_data];
+				session()->put('cart', $cart);
+			}
+			if (isset($cart[$id])) {
+				$cart[$id]["price"] = $price;
+				$cart[$id]["plan_id"]	= $plan_id;
+				$cart[$id]["addons"]	= $addons;
+			}
+			session()->put('cart', $cart);
+
+		}
+
+		return redirect('/shopping_cart');
+	}
+
+	public function add_to_cart(Request $request)
+	{
+		if ($request->type != '') {
+			$type = $request->type;
+		} else {
+			$type = 1;
+		}
+		if ($request->cycle != '') {
+			$cycle = $request->cycle;
+		} else {
+			$cycle = 1;
+		}
+
+		$form = array();
+		$form['services'] = $id = $request->domain;
+		$form['cycle'] 		= $request->cycle;
+		$form['qty'] 		= $request->qty;
+		$form['price'] = $price = $request->price;
+		$form['plan_id'] 	= $request->plan_id;
+		$form['page'] 		= $request->page;
+		$form['type']		= $type;
+		$form['addons']		= '';
+		// Added by rejohn  
+		if ($request->price != '') {
+			$form['domain_cycle']	= $request->domain_cycle;
+			$form['domain_price']	= $price;
+		} else {
+			$form['domain_cycle']	= '';
+			$form['domain_price']	= '';
+		}
+
+		if ($form['plan_id']) {
+			$plan_details = Plan::where('id', $form['plan_id'])->first();
+			if($plan_details->price_type == 'Recurring')
+				$price = $plan_details->price_annually + $plan_details->setup_fee_one_time;
+			
+			if($plan_details->price_type == 'One Time')
+				$price = $plan_details->price_one_time + $plan_details->setup_fee_one_time;
+			
+			if($plan_details->price_type == 'Free')
+				$price = $price;
+		}
+		// $res 		   = $this->add_to_cart_cookies($form);
+		$cart = session()->get('cart');
+		$cart_data = [
+			'cycle'			=> $cycle,
+			'qty' 			=> $form['qty'],
+			'price' 		=> $price,
+			'plan_id' 		=> $form['plan_id'],
+			'page' 			=> $form['page'],
+			'type'			=> $form['type'],
+			'addons'		=> $form['addons'],
+			'domain_cycle'	=> $form['domain_cycle'],
+			'domain_price'	=> $form['domain_price']
+		];
+
+		if (!$cart) {
+			$cart = [$id => $cart_data];
+			session()->put('cart', $cart);
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Added successfully']
+			), 200);
+		}
+		if (isset($cart[$id])) {
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Item already in cart']
+			), 200);
+		}
+		$cart[$id] = $cart_data;
+		session()->put('cart', $cart);
+		return Response::json(array(
+			'success' => true,
+			'errors' => ['message' => 'Added successfully']
+		), 200);
+	}
+
+	public function checkout_login(Request $request)
+	{
+
+		$total_price = $request->total_price;
+		$discount    = $request->discount;
+
+		//add total price and discount to session
+		$cart = session()->get('cart');
+		$cart['total_price'] = $total_price;
+		$cart['discount']    = $discount;
+		session()->put('cart', $cart);
+
+		if ($total_price != null && $total_price != "") {
+			$user_info = User::with('client')->where('id', Auth::id())->first();
+			if ($user_info->client->state_id != null) {
+				$state = $this->get_state($user_info->client->state_id);
+				$state = $state[0];
+			}
+
+			if ($user_info->client->city_id != null) {
+				$city = $this->get_city($user_info->client->city_id);
+				$city = $city[0];
+			}
+			$pm = PaymentMethod::all();
+			return view('frontend.checkout_login', compact('pm', 'user_info', 'state', 'city', 'total_price'));
+		}
+	}
+
+	public function get_state($state_id)
+	{
+		return State::where('id', $state_id)->pluck('name');
+	}
+	public function get_city($city_id)
+	{
+		return City::where('id', $city_id)->pluck('name');
+	}
+
+	public function order_confirmation_login(Request $request)
+	{
+		$cart = session()->get('cart');
+		// print_r($cart);exit;
+		// dd($request->all());
+		// die;
+		// if($request->purchase_amount == 0.00){
+		// 	$return_data = [
+		// 		'update_status'  	   => False,
+		// 		'update_message' 		 => 'Please add some products to go further'
+		// 	];
+		// 	return redirect('/shopping_cart')->with($return_data);
+		// }
+		if (!empty($request->billing['address'])) {
+			//check exist
+			$item = UserBilling::where('user_id', Auth::id())->first();
+			if ($item) {
+				$item->delete();
+				$save = UserBilling::create($request->billing);
+			} else {
+				$save = UserBilling::create($request->billing);
+			}
+		}
+
+		if (!empty($request->additional['address'])) {
+			$item = UserAdditional::where('user_id', Auth::id())->first();
+			if ($item) {
+				$item->delete();
+				$save = UserAdditional::create($request->additional);
+			} else {
+				$save = UserAdditional::create($request->additional);
+			}
+		}
+		//dd($request->all());
+		if (empty($request->orderId)) {
+			$form                    = new Order;
+			$form->user_id           = Auth::id();
+			$form->transaction_id    = str_random(17);
+			$form->payer_id          = str_random(13);
+			$form->total_amount      = $request->purchase_amount;
+			$form->payment_method_id = $request->paid_by;
+			$form->discount          = isset($cart['discount']) ? $cart['discount'] : 0;
+			$form->status            = 'INCOMPLETE';
+			$form->payment_date      = date('Y-m-d');
+			$form->object            = serialize($request->detail);
+			$form->save();
+		}
+		//adding item into order items table after payment success
+		// $cart_items = Cartitem::all();
+
+		//dd($cart_items);
+		$cartitems = array();
+		
+		if (session('cart')) {
+			$i = 0;
+			foreach (session('cart') as $key => $value) {
+				//exception data
+				if(!in_array($key, ['discount', 'total_price'])){
+					if ($value['plan_id'] != '') {
+						$plan_id = $value['plan_id'];
+					} else {
+						$plan_id = '';
+					}
+					$price        = $value['price'];
+					$domain_price = (isset($value['domain_price']) && $value['domain_price'] != '') ? $value['domain_price'] : 0;
+	
+					$cartitems[$key]['user_id']      = Auth::id();
+					$cartitems[$key]['order_id']     = $form->id;
+					$cartitems[$key]['services']     = $key;
+					$cartitems[$key]['cycle']        = $value['cycle'];
+					$cartitems[$key]['domain_cycle'] = $value['domain_cycle'];
+					$cartitems[$key]['qty']          = $value['qty'];
+					$cartitems[$key]['price']        = $price;
+					$cartitems[$key]['domain_price'] = $domain_price;
+					$cartitems[$key]['plan_id']      = $plan_id;
+					$cartitems[$key]['type']         = $value['type'];
+					if (isset($value['addons']))
+						$cartitems[$key]['addons'] = json_encode($value['addons']);
+					$i++;
+				}
+				
+			}
+		}
+		// dd($cartitems);
+		//adding item into order items table after payment success - end
+		OrderItem::insert($cartitems);
+		$domainArr = array();
+		if (!empty($request->paid_by) && in_array($request->paid_by, [2, 3, 4])) {
+			foreach (session('cart') as $key => $value) {
+				//exception data
+				if(!in_array($key, ['discount', 'total_price'])){
+					$domainArr[$key]['user_id']     = Auth::id();
+					$domainArr[$key]['name'] 	    = $key;
+					$domainArr[$key]['status']      = "Active";
+					$domainArr[$key]['created_at']  = date('Y-m-d');
+					$domainArr[$key]['exp_date']    = date('Y-m-d', strtotime('+' . $value['cycle'] . 'years'));
+					$domainArr[$key]['updated_at']  = date('Y-m-d');
+				}
+			}
+			//Adding domain information to domain table after payment success
+			domain::insert($domainArr);
+		}
+
+		// Cartitem::truncate(); //empty cartitem
+		$cart = session()->get('cart');
+		unset($cart);
+		session()->put('cart', []);
+		$orderID = !empty($request->orderId) ? $request->orderId : $form->transaction_id;
+		$name 	 = "domain";
+		return view('frontend.order_confirmation_login', compact('orderID', 'name'));
+	}
+
+	public function empty_cart(Request $request)
+	{
+
+		$cart = session()->get('cart');
+		if ($request->has('id')) {
+
+			if (isset($cart[$request->id])) {
+				unset($cart[$request->id]);
+				session()->put('cart', $cart);
+			}
+			session()->flash('success', 'successfully removed!');
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Removed successfully']
+			), 200);
+		}
+		if ($request->has('ids')) {
+			unset($cart);
+			session()->put('cart', []);
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Removed successfully']
+			), 200);
+		}
+	}
+
+	public function save_before_payment(Request $request)
+	{
+
+		if (!empty($request->billing['address'])) {
+			//check exist
+			$item = UserBilling::where('user_id', Auth::id())->first();
+			if ($item) {
+				$item->delete();
+				$save = UserBilling::create($request->billing);
+			} else {
+				$save = UserBilling::create($request->billing);
+			}
+		}
+
+		if (!empty($request->additional['address'])) {
+			$item = UserAdditional::where('user_id', Auth::id())->first();
+			if ($item) {
+				$item->delete();
+				$save = UserAdditional::create($request->additional);
+			} else {
+				$save = UserAdditional::create($request->additional);
+			}
+		}
+		return Response::json(array(
+			'success' => true,
+			'errors' => ['message' => 'Removed successfully']
+		), 200);
+	}
+
+	public function payment_done(Request $request)
+	{
+		$cart = session()->get('cart');
+		// Log::info(print_r($request->data, true));
+		// print_r($request->data);
+		// echo '<pre>';
+		// print_r(session)
+		// dd(session('cart'));
+		if (!empty($request->data)) {
+			$form 		             = new Order;
+			$form->user_id           = Auth::id();
+			$form->transaction_id    = $request->data['orderID'];
+			$form->payer_id          = $request->data['payerID'];
+			$form->total_amount      = $request->detail['purchase_units'][0]['amount']['value'];
+			$form->payment_method_id = 7;
+			$form->status            = $request->detail['status'];
+			$form->discount          = isset($cart['discount']) ? $cart['discount'] : 0;
+			$form->payment_date      = date('Y-m-d');
+			$form->object            = serialize($request->detail);
+
+			if ($form->save()) {
+
+				$cartitems = array();
+				if (session('cart')) {
+					foreach (session('cart') as $key => $value) {
+						//exception data
+						if(!in_array($key, ['discount', 'total_price'])){
+							if ($value['plan_id'] != '') {
+								$plan_id = $value['plan_id'];
+							} else {
+								$plan_id = '';
+							}
+							if (!empty($value['addons'])) {
+								$addons = $value['addons'];
+							} else {
+								$addons = '';
+							}
+							$price        = $value['price'];
+							$domain_price = (isset($value['domain_price']) && $value['domain_price'] != '') ? $value['domain_price'] : 0;
+
+							$cartitems[$key]['user_id']      = Auth::id();
+							$cartitems[$key]['order_id']     = $form->id;
+							$cartitems[$key]['services']     = $key;
+							$cartitems[$key]['cycle']        = $value['cycle'];
+							$cartitems[$key]['qty']          = $value['qty'];
+							$cartitems[$key]['price']        = $price;
+							$cartitems[$key]['plan_id']      = $plan_id;
+							$cartitems[$key]['type']         = $value['type'];
+							$cartitems[$key]['addons']       = $addons;
+							$cartitems[$key]['domain_cycle'] = $value['domain_cycle'];
+							$cartitems[$key]['domain_price'] = $domain_price;
+						}
+					}
+				}
+
+				OrderItem::insert($cartitems);
+
+				//adding item into order items table after payment success - end
+
+				foreach (session('cart') as $key => $value) {
+					//exception data
+					if(!in_array($key, ['discount', 'total_price'])){
+						$domainArr[$key]['user_id']     = Auth::id();
+						$domainArr[$key]['name'] 	    = $key;
+						$domainArr[$key]['status']      = "Active";
+						$domainArr[$key]['created_at']  = date('Y-m-d');
+						$domainArr[$key]['exp_date']    = date('Y-m-d', strtotime('+' . $value['cycle'] . 'years'));
+						$domainArr[$key]['updated_at']  = date('Y-m-d');
+					}
+				}
+				//Adding domain information to domain table after payment success
+				domain::insert($domainArr);
+
+				unset($cart);
+				session()->put('cart', []);
+				return Response::json(array(
+					'success' => true,
+					'errors' => ['message' => 'Payment Done successfully']
+				), 200);
+			} else {
+				return Response::json(array(
+					'success' => false,
+					'errors' => ['message' => 'errror found, try again later']
+				), 200);
+			}
+		}
+		return Response::json(array(
+			'success' => false,
+			'errors' => ['message' => 'errror found, try again later']
+		), 200);
+	}
+
+	public function dedicatedServersShoppingCart(Request $request)
+	{
+		dd($request->all());
+	}
+
+	// Added By Rejohn
+	public function update_cart(Request $request)
+	{
+		$oldCart = session()->get('cart');
+
+		if ($request->update_field == 'year') {
+			$newCart = array();
+			foreach ($oldCart as $key => $value) {
+				foreach ($value as $k => $val) {
+					if ($key == $request->domain && $k == 'cycle') {
+						$newCart[$key][$k] = $request->year;
+					} else {
+						$newCart[$key][$k] = $val;
+					}
+				}
+			}
+			// dd($oldCart, $newCart);
+			unset($oldCart);
+			session()->put('cart', $newCart);
+
+			session()->flash('success', 'successfully Update!');
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Update successfully']
+			), 200);
+		}
+
+		if ($request->update_field == 'quantity') {
+			$newCart = array();
+			foreach ($oldCart as $key => $value) {
+				foreach ($value as $k => $val) {
+					if (
+						$key == $request->domain && $k == 'qty'
+					) {
+						$newCart[$key][$k] = $request->quantity;
+					} else {
+						$newCart[$key][$k] = $val;
+					}
+				}
+			}
+			unset($oldCart);
+			session()->put('cart', $newCart);
+
+			session()->flash('success', 'successfully Update!');
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Update successfully']
+			), 200);
+		}
+
+		if ($request->update_field == 'domain_cycle') {
+			$newCart = array();
+			foreach ($oldCart as $key => $value) {
+				foreach ($value as $k => $val) {
+					if (
+						$key == $request->domain && $k == 'domain_cycle'
+					) {
+						$newCart[$key][$k] = $request->year;
+					} else {
+						$newCart[$key][$k] = $val;
+					}
+				}
+			}
+			unset($oldCart);
+			session()->put('cart', $newCart);
+
+			session()->flash('success', 'successfully Update!');
+			return Response::json(array(
+				'success' => true,
+				'errors' => ['message' => 'Update successfully']
+			), 200);
+		}
+	}
+}

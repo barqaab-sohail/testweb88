@@ -1,0 +1,24 @@
+[2023-07-14 13:04:47] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [] is not defined. at D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Log\\LogManager.php:212)
+[stacktrace]
+#0 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Log\\LogManager.php(137): Illuminate\\Log\\LogManager->resolve(NULL, NULL)
+#1 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Log\\LogManager.php(124): Illuminate\\Log\\LogManager->get(NULL)
+#2 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Log\\LogManager.php(665): Illuminate\\Log\\LogManager->driver()
+#3 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Exceptions\\Handler.php(287): Illuminate\\Log\\LogManager->error('Call to undefin...', Array)
+#4 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Exceptions\\Handler.php(250): Illuminate\\Foundation\\Exceptions\\Handler->reportThrowable(Object(Error))
+#5 D:\\xampp\\htdocs\\web88\\app\\Exceptions\\Handler.php(36): Illuminate\\Foundation\\Exceptions\\Handler->report(Object(Error))
+#6 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(497): App\\Exceptions\\Handler->report(Object(Error))
+#7 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(146): Illuminate\\Foundation\\Http\\Kernel->reportException(Object(Error))
+#8 D:\\xampp\\htdocs\\web88\\index.php(50): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#9 {main}
+"} 
+[2023-07-14 13:04:47] laravel.ERROR: Call to undefined function base_url() {"exception":"[object] (Error(code: 0): Call to undefined function base_url() at D:\\xampp\\htdocs\\web88\\config\\app.php:126)
+[stacktrace]
+#0 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Bootstrap\\LoadConfiguration.php(70): require()
+#1 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Bootstrap\\LoadConfiguration.php(39): Illuminate\\Foundation\\Bootstrap\\LoadConfiguration->loadConfigurationFiles(Object(Illuminate\\Foundation\\Application), Object(Illuminate\\Config\\Repository))
+#2 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Application.php(261): Illuminate\\Foundation\\Bootstrap\\LoadConfiguration->bootstrap(Object(Illuminate\\Foundation\\Application))
+#3 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(186): Illuminate\\Foundation\\Application->bootstrapWith(Array)
+#4 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(170): Illuminate\\Foundation\\Http\\Kernel->bootstrap()
+#5 D:\\xampp\\htdocs\\web88\\vendor\\laravel\\framework\\src\\Illuminate\\Foundation\\Http\\Kernel.php(144): Illuminate\\Foundation\\Http\\Kernel->sendRequestThroughRouter(Object(Illuminate\\Http\\Request))
+#6 D:\\xampp\\htdocs\\web88\\index.php(50): Illuminate\\Foundation\\Http\\Kernel->handle(Object(Illuminate\\Http\\Request))
+#7 {main}
+"} 

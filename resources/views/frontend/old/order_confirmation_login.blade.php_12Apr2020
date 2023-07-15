@@ -1,0 +1,117 @@
+@extends('layouts.frontend_layout')
+@section('title','Admin | Domain Configuration')
+@section('content')
+@section('page_header','Services')
+<?php
+if(isset($response->price_list->pricing) && !empty($response->price_list->pricing))
+{
+   $pricing_list = json_decode($response->price_list->pricing);
+   $id = json_decode($response->price_list->id);
+}else{
+  $id = 0;
+}
+
+?>
+<div class="clearfix"></div>
+
+
+<div class="page_title1 sty9">
+<div class="container">
+
+	<h1>Online Order</h1>
+    @if($name == "domain")
+    <div class="pagenation">
+    <!-- note to programmer: above is the breadcrumb scenario if client orders domain first. -->
+    <div class="clearfix"></div>
+    &nbsp;<a href="{{url('/')}}">Home</a> <i>/</i> <a href="{{url('/dashboard')}}">Dashboard</a> <i>/</i> <a href="{{url('/my_account')}}">My Domains</a> <i>/</i> <a href="{{route('frontend.domain.registerNewLogin')}}">Register A New Domain</a> <i>/</i> <a href="{{url('/domain_configuration')}}">Domain Configuration</a> <i>/</i> <a href="{{url('/shopping_cart')}}">Shopping Cart</a> <i>/</i> <a href="{{url('/checkout_login')}}">Checkout</a> <i>/</i> Order Confirmation </div>
+    @endif
+
+    @if($name == "services")
+    <div class="pagenation">
+    <!-- note to programmer: below is the breadcrumb scenario if client order hosting or other services first, -->
+    <div class="clearfix"></div>
+    &nbsp;<a href="{{url('/')}}">Home</a> <i>/</i> <a href="{{url('/dashboard')}}">Dashboard</a> <i>/</i> <a href="shared_hosting.html">Shared Hosting</a> <i>/</i> <a href="domain_configuration_hosting_login.html">Choose a Domain</a> <i>/</i> <a href="{{url('/shopping_cart')}}">Shopping Cart</a> <i>/</i> <a href="{{url('/checkout_login')}}">Checkout</a> <i>/</i> Order Confirmation  </div>
+    @endif
+
+</div>
+</div><!-- end page title -->
+
+<div class="clearfix"></div>
+<div class="clearfix margin_bottom5"></div>
+
+ <div class="one_full stcode_title9">
+ 	<h1 class="caps"><strong>Order Confirmation</strong></h1>
+ </div>
+
+<div class="clearfix"></div>
+
+<div class="content_fullwidth">
+	<div class="container">
+
+   	  <div class="one_fourth_less">
+            <h4>Client Area</h4>
+             <ul class="list-group">
+            	<li class="list-group-item"><h5 class="white">Quick Links</h5></li>
+                <li class="list-group-item"><a href="{{url('/dashboard')}}"><i class="fa fa-caret-right"></i> Dashboard</a></li>
+                <li class="list-group-item alt"><h5>Products/Services</h5></li>
+                <li class="list-group-item"><a href="services_my_services.html"><i class="fa fa-caret-right"></i> My Services Listing</a></li>
+
+                <li class="list-group-item alt"><h5>Orders</h5></li>
+                <li class="list-group-item">
+                  <a href="{{ url('order_history_list') }}">
+                    <i class="fa fa-caret-right"></i> My Order History
+                  </a>
+                </li>
+
+                <li class="list-group-item alt"><h5>Domains</h5></li>
+                <li class="list-group-item"><a href="domain_my_domains.html"><i class="fa fa-caret-right"></i> My Domains</a></li>
+                <li class="list-group-item"><a href="{{ url('domain_domain_renewal') }}"><i class="fa fa-caret-right"></i> Renew Domains</a></li>
+                <li class="list-group-item"><a href="{{ url('domain_register_new_login') }}"><i class="fa fa-caret-right"></i> Register a New Domain</a></li>
+                <li class="list-group-item"><a href="{{ url('domain_transfer_login') }}"><i class="fa fa-caret-right"></i> Transfer Domains to Us</a></li>
+                <li class="list-group-item"><a href="{{ url('domain_search_login') }}"><i class="fa fa-caret-right"></i> Domain Search</a></li>
+
+                <li class="list-group-item alt"><h5>Billing</h5></li>
+                <li class="list-group-item"><a href="billing_my_invoices.html"><i class="fa fa-caret-right"></i> My Invoices</a></li>
+                <li class="list-group-item"><a href="billing_my_quotes.html"><i class="fa fa-caret-right"></i> My Quotes</a></li>
+                <li class="list-group-item"><a href="billing_mass_payment.html"><i class="fa fa-caret-right"></i> Make Payment / Mass Payment</a></li>
+                <li class="list-group-item alt"><h5>Support</h5></li>
+                <li class="list-group-item"><a href="{{ url('support_tickets') }}"><i class="fa fa-caret-right"></i> My Support Tickets</a></li>
+                <li class="list-group-item"><a href="{{ url('support_tickets/create') }}"><i class="fa fa-caret-right"></i> Open New Ticket</a></li>
+
+                <li class="list-group-item alt"><h5>My Account</h5></li>
+                <li class="list-group-item"><a href="{{ url('my_account') }}"><i class="fa fa-caret-right"></i> Edit Account Details</a></li>
+                <li class="list-group-item"><a href="{{ url('my_account?change-password') }}"><i class="fa fa-caret-right"></i> Change Password</a></li>
+
+             </ul>
+
+      </div><!-- end section -->
+
+      <div class="three_fourth_less last">
+
+           <div class="alertymes5">
+                <h3 class="light"><i class="fa fa-check-circle"></i><strong>Your Invoice # is: MY-{{$orderID}}</strong>
+                <br/>
+             Your order has been successfully created.</h3>
+        </div><!-- end section -->
+           <div class="clearfix margin_bottom3"></div>
+
+          <p class="text-18px dark light">Thank you for your order. You will receive a confirmation email shortly.</p>
+          <p class="text-18px dark light">If you have any questions about your order, please open a support ticket from your client area and quote your invoice number.</p>
+
+        <div class="clearfix"></div>
+          <div class="divider_line7"></div>
+          <div class="clearfix"></div>
+
+          <div class="alicent">
+                  <a href="{{url('/dashboard')}}" class="btn btn-danger caps"><i class="fa icon-user"></i> <b>Dashboard</b></a>&nbsp;
+     </div>
+
+      </div><!-- end section -->
+
+
+    </div>
+</div><!-- end content fullwidth -->
+
+<div class="clearfix"></div>
+<div class="divider_line"></div>
+@endsection

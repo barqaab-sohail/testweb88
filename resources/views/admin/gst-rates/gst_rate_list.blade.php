@@ -1,0 +1,447 @@
+<?php
+$page = 'gst_rates';
+$breadcrumbs = [
+    array('url' => false, 'name' => 'Global Setup'),
+    array('url' => url('admin/gst_rates'), 'name' => 'GST Rate - Listing'),
+];
+?>
+@extends('layouts.admin_layout')
+@section('title','Admin | GST Rate - Listing')
+@section('page_header','Global Setup')
+@section('content')
+    <div class="page-content">
+        <div class="row">
+            <div class="col-lg-12">
+                <h2>Gst Rate <i class="fa fa-angle-right"></i> Listing</h2>
+                <div class="clearfix"></div>
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissable">
+                        <button type="button" data-dismiss="alert" aria-hidden="true" class="close">&times;</button>
+                        <i class="fa fa-check-circle"></i> <strong>Success!</strong>
+                        <p>The information has been {{ session('success') }} successfully.</p>
+                    </div>
+                @endif
+                @if(session('error'))
+                    <div id="errorMessageWrap" class="alert alert-danger alert-dismissable" style="display: none;">
+                        <button type="button" data-dismiss="alert" aria-hidden="true" class="close">&times;</button>
+                        <i class="fa fa-times-circle"></i> <strong>Error!</strong>
+                        <p id="errorMessage">The information has not been {{ session('success') }}. Please correct the errors.</p>
+                    </div>
+                @endif
+<!--                <div id="successMessageWrap" class="alert alert-success alert-dismissable" style="display: none;">
+                    <button type="button" data-dismiss="alert" aria-hidden="true" class="close">&times;</button>
+                    <i class="fa fa-check-circle"></i> <strong>Success!</strong>
+                    <p>The information has been saved/updated successfully.</p>
+                </div>
+                <div id="errorMessageWrap" class="alert alert-danger alert-dismissable" style="display: none;">
+                    <button type="button" data-dismiss="alert" aria-hidden="true" class="close">&times;</button>
+                    <i class="fa fa-times-circle"></i> <strong>Error!</strong>
+                    <p id="errorMessage">The information has not been saved/updated. Please correct the errors.</p>
+                </div>-->
+                <div class="pull-left"> Last updated: <span class="text-blue">{{ $recent_update }}</span> </div>
+                <div class="clearfix"></div>
+                <p></p>
+                <div class="clearfix"></div>
+            </div>
+            <div class="col-lg-12">
+                <div class="alert alert-warning" role="alert">
+                    <h4 class="alert-heading">Note</h4>
+                    <p>Only the rate with the smallest id and active state will be used</p>
+                </div>
+                <div class="portlet">
+                    <div class="portlet-header">
+                        <div class="caption">Gst Rate Setup</div>
+                        <br />
+                        <p class="margin-top-10px"></p>
+                        <a href="#" class="btn btn-success" data-target="#modal-add-gstRate" data-toggle="modal">Add New Rate &nbsp;<i class="fa fa-plus"></i></a>&nbsp;
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary">Delete</button>
+                            <button type="button" data-toggle="dropdown" class="btn btn-red dropdown-toggle"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>
+                            <ul role="menu" class="dropdown-menu">
+                                <li><a href="#" class="selectedDelete">Delete selected item(s)</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#" id="allMetaDelete">Delete all</a></li>
+                            </ul>
+                        </div>
+
+                        <div class="tools"> <i class="fa fa-chevron-up"></i> </div>
+                        <!--Add New gst rate modal Start-->
+                        <div id="modal-add-gstRate" tabindex="-1" role="dialog" aria-labelledby="modal-login-label" aria-hidden="true" class="modal fade">
+                            <div class="modal-dialog modal-wide-width">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" data-dismiss="modal" aria-hidden="true" class="close gstrate-form-close">&times;</button>
+                                        <h4 id="modal-login-label3" class="modal-title">Add New Gst Rate</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="form">
+                                            <form class="form-horizontal" id="gst_rate_form">
+                                                <div class="form-group">
+                                                    <label class="col-md-3 control-label">Status <span class="text-red">*</span></label>
+                                                    <div class="col-md-6">
+                                                        <div data-on="success" data-off="primary" class="make-switch">
+                                                            <input type="checkbox" name="status" checked="checked" />
+                                                        </div>
+                                                        <div class="red_error" id="status"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-md-3 control-label">Name <span class="text-red">*</span></label>
+                                                    <div class="col-md-6">
+                                                        <input type="text" name="name" class="form-control" placeholder="eg. GST Rate">
+                                                        <div class="red_error" id="name"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-md-3 control-label">Rate (%)<span class="text-red">*</span></label>
+                                                    <div class="col-md-6">
+                                                        <input type="text" name="rate" class="form-control" placeholder="">
+                                                        <div class="red_error" id="rate"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="form-actions">
+                                                    <div class="col-md-offset-5 col-md-8"> <a href="javascript:void(0)" id="save_gstrate" class="btn btn-red">Save &nbsp;<i class="fa fa-floppy-o"></i></a>&nbsp; <a href="#" data-dismiss="modal" class="btn btn-green gstrate-form-close">Cancel &nbsp;<i class="glyphicon glyphicon-ban-circle"></i></a> </div>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!--Add New gst rate modal End-->
+
+                        <!--Modal delete selected items start-->
+                        <div id="modal-delete-selected" tabindex="-1" role="dialog" aria-labelledby="modal-login-label" aria-hidden="true" class="modal fade">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+                                        <h4 id="modal-login-label4" class="modal-title"><a href=""><i class="fa fa-exclamation-triangle"></i></a> Are you sure you want to delete the selected item(s)? </h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p id="appendSelectedHtml"></p>
+                                        {{ Form::open([ 'url' => url('admin/gst_rate_selected_delete') ]) }}
+                                        {{ Form::hidden('target_items', '', [ 'id' => 'selectedArrayValue' ]) }}
+                                        <div class="form-actions">
+                                            <div class="col-md-offset-4 col-md-8">
+                                                <button href="#" class="btn btn-red remove_single_item">
+                                                    Yes &nbsp;<i class="fa fa-check"></i>
+                                                </button>&nbsp;
+                                                <button href="#" data-dismiss="modal" class="btn btn-green delete-cancel-btn">
+                                                    No &nbsp;<i class="fa fa-times-circle"></i>
+                                                </button>
+                                                {{ Form::submit('delete order', [ 'class' => 'delete_order_submit hidden' ]) }}
+                                            </div>
+                                        </div>
+                                        {{ Form::close() }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="modal-delete-selected-error" tabindex="-1" role="dialog" aria-labelledby="modal-login-label" aria-hidden="true" class="modal fade">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+                                        <h4 id="modal-login-label4" class="modal-title"><a href=""><i class="fa fa-exclamation-triangle"></i></a> Are you sure you want to delete the selected item(s)? </h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-danger alert-dismissable">
+                                            <p>Please select at least one item for delete.</p>
+                                        </div>
+                                        <div class="form-actions hide">
+                                            <div class="col-md-offset-4 col-md-8"> <a href="#" class="btn btn-red">Yes &nbsp;<i class="fa fa-check"></i></a>&nbsp; <a href="#" data-dismiss="modal" class="btn btn-green">No &nbsp;<i class="fa fa-times-circle"></i></a> </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- modal delete selected items end -->
+
+                        <!--Modal delete all items start-->
+                        <!-- modal delete all items end -->
+                    </div>
+                    <div class="portlet-body">
+                        <div class="form-inline pull-left">
+                            <div class="form-group">
+                                <select id="gstRatePagination" name="select" class="form-control">
+                                    <option value="10" @if($items==10) selected="selected" @endif>10</option>
+                                    <option value="20" @if($items==20) selected="selected" @endif>20</option>
+                                    <option value="30" @if($items==30) selected="selected" @endif>30</option>
+                                    <option value="50" @if($items==50) selected="selected" @endif>50</option>
+                                </select>
+                                &nbsp;
+                                <label class="control-label">Records per page</label>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+                        <div class="table-responsive mtl">
+                            <table id="example1" class="table table-hover table-striped">
+                                <thead>
+                                <tr>
+                                    <th width="1%"><input id="gstrateCheckSelectAll" type="checkbox" /></th>
+                                    <th>#</th>
+                                    <th><a href="#sort by page name">Name</a></th>
+                                    <th><a href="#sort by page title">Rate (%)</a></th>
+                                    <th><a href="#sort by status">Status</a></th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @if(!empty($gstrates))
+                                    @php $i = ($gstrates->perPage() * ($gstrates->currentPage() - 1)) + 1; @endphp
+                                    @foreach($gstrates as $gstrate)
+                                        @if(isset($gstrate->name))
+                                            <tr>
+                                                <td><input type="checkbox" class="gstrateCheck" data-id="{{ $gstrate->id }}" data-name="{{$gstrate->name}}" /></td>
+                                                <td>{{ $i++ }}</td>
+                                                <td>{{ $gstrate->name }}</td>
+                                                <td>{{ $gstrate->rate }}</td>
+                                                <td>
+                                                    @if($gstrate->status == 1)
+                                                        <span class="label label-xs label-success">Active</span>
+                                                    @endif
+                                                    @if($gstrate->status == 2)
+                                                        <span class="label label-xs label-danger">Inactive</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <a href="#" data-hover="tooltip" data-placement="top" title="Edit" data-target="#modal-edit-gstrate-{{ $gstrate->id }}" data-toggle="modal"><span class="label label-sm label-success"><i class="fa fa-pencil"></i></span></a>
+                                                    <a href="#" class="deleteById" data-hover="tooltip" data-placement="top" title="Delete" data-id="{{ $gstrate->id }}" data-name="{{$gstrate->name}}"><span class="label label-sm label-red"><i class="fa fa-trash-o"></i></span></a>
+                                                    <!--Modal edit gstrate start-->
+                                                    <div id="modal-edit-gstrate-{{ $gstrate->id }}" tabindex="-1" role="dialog" aria-labelledby="modal-login-label" aria-hidden="true" class="modal fade">
+                                                        <div class="modal-dialog modal-wide-width">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <button type="button" data-dismiss="modal" aria-hidden="true" class="close gstrate-form-close">&times;</button>
+                                                                    <h4 id="modal-login-label3" class="modal-title">Edit GST Rate</h4>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="form">
+                                                                        <form class="form-horizontal" id="gstrate_update_form-{{ $gstrate->id}}">
+                                                                            <div class="form-group">
+                                                                                <label class="col-md-3 control-label">Status <span class="text-red">*</span></label>
+                                                                                <div class="col-md-6">
+                                                                                    <div data-on="success" data-off="primary" class="make-switch">
+                                                                                        @if($gstrate->status == 1)
+                                                                                            <input type="checkbox" name="status" checked="checked"/>
+                                                                                        @else
+                                                                                            <input type="checkbox" name="status"/>
+                                                                                        @endif
+                                                                                        <input type="hidden" name="id" value="{{ $gstrate->id }}" />
+                                                                                    </div>
+                                                                                    <div class="red_error" id="statusUpdate"></div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="form-group">
+                                                                                <label class="col-md-3 control-label">Name <span class="text-red">*</span></label>
+                                                                                <div class="col-md-6">
+                                                                                    <input type="text" name="name" class="form-control" placeholder="" value="{{ $gstrate->name }}">
+                                                                                    <div class="red_error" id="nameUpdate"></div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="form-group">
+                                                                                <label class="col-md-3 control-label">Rate <span class="text-red">*</span></label>
+                                                                                <div class="col-md-6">
+                                                                                    <input type="text" name="rate" class="form-control" placeholder="" value="{{ $gstrate->rate }}">
+                                                                                    <div class="red_error" id="rateUpdate"></div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="form-actions">
+                                                                                <div class="col-md-offset-5 col-md-8"> <a href="javascript:void(0)" class="btn btn-red update_gstrate disableBtn-{{$gstrate->id}}" data-id="{{ $gstrate->id }}">Save &nbsp;<i class="fa fa-floppy-o"></i></a>&nbsp; <a href="#" data-dismiss="modal" class="btn btn-green gstrate-form-close">Cancel &nbsp;<i class="glyphicon glyphicon-ban-circle"></i></a> </div>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--Modal edit gstrate End-->
+
+                                                    <!--Modal Delete gstrate start-->
+                                                    <div id="modal-delete-by-id" tabindex="-1" role="dialog" aria-labelledby="modal-login-label" aria-hidden="true" class="modal fade">
+                                                        <div class="modal-dialog">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <button type="button" data-dismiss="modal" aria-hidden="true" class="close">&times;</button>
+                                                                    <h4 id="modal-login-label4" class="modal-title"><a href=""><i class="fa fa-exclamation-triangle"></i></a> Are you sure you want to delete this item? </h4>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <p id="appendSelectedHtmlDeleteById"></p>
+                                                                    {{ Form::open([ 'url' => url('admin/gst_rate_selected_delete') ]) }}
+                                                                    {{ Form::hidden('target_items', '', [ 'id' => 'gstRateDeleteById' ]) }}
+                                                                    <div class="form-actions">
+                                                                        <div class="col-md-offset-4 col-md-8">
+                                                                            <button href="#" class="btn btn-red remove_single_item">
+                                                                                Yes &nbsp;<i class="fa fa-check"></i>
+                                                                            </button>&nbsp;
+                                                                            <button href="#" data-dismiss="modal" class="btn btn-green delete-cancel-btn">
+                                                                                No &nbsp;<i class="fa fa-times-circle"></i>
+                                                                            </button>
+                                                                            {{ Form::submit('delete order', [ 'class' => 'delete_order_submit hidden' ]) }}
+                                                                        </div>
+                                                                    </div>
+                                                                    {{ Form::close() }}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <!--Modal Delete gstrate End-->
+
+                                                </td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                @endif
+                                </tbody>
+                                <tfoot>
+                                <tr>
+                                    <td colspan="6"></td>
+                                </tr>
+                                </tfoot>
+                            </table>
+                            <div class="tool-footer text-right">
+                                <p class="pull-left">Showing page {{ $gstrates->currentPage() }} of {{ $gstrates->lastPage() }} total {{ $gstrates->total() }} entries</p>
+                                {{ $gstrates->appends(Request::all())->links() }}
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+@section('custom_scripts')
+    <script>
+        $(document).ready(function() {
+            document.getElementById('gstRatePagination').onchange = function() {
+                window.location = "{{ $gstrates->url(1) }}&items=" + this.value;
+            };
+            $('#save_gstrate').click(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    url: base_url + '/admin/gstrate_create',
+                    type: 'POST',
+                    data: $("#gst_rate_form").serialize(),
+                    success: function(data) {
+                        location.reload();
+                        /*if (data.status == 200) {
+                            $('#successMessageWrap').show();
+                            $('#save_gstrate').attr("disabled", 'disabled');
+                            $('#modal-add-gstRate').modal('hide');
+                        }
+                        if (data.status == 404) {
+                            $('#errorMessageWrap').show();
+                            $('#modal-add-gstRate').modal('hide');
+                            //$('#errorMessage').text(data.message);
+                        }*/
+                    },
+                    error: function(response) {
+                        $('#status').html(response.responseJSON.status);
+                        $('#name').html(response.responseJSON.name);
+                        $('#rate').html(response.responseJSON.rate);
+                        $('#selectPage').html(response.responseJSON.pages);
+                    }
+                });
+            });
+
+            $(document).on('click', '.gstrate-form-close', function() {
+                location.reload();
+            });
+
+            $(document).on('click', '#gstrateCheckSelectAll', function() {
+                let baseChecked = $('#gstrateCheckSelectAll').is(':checked');
+                if (baseChecked) {
+                    $('input:checkbox.gstrateCheck').prop("checked", true);
+                } else {
+                    $('input:checkbox.gstrateCheck').prop("checked", false);
+                }
+            });
+
+            $(document).on('click', '.gstrateCheck', function() {
+                let numberOfChecked = $('.gstrateCheck:checked').length;
+                if (numberOfChecked => 1) {
+                    $('#gstrateCheckSelectAll').prop('checked', true);
+                }
+                if (numberOfChecked == 0) {
+                    $('#gstrateCheckSelectAll').prop('checked', false);
+                }
+            });
+
+            $('.selectedDelete').on('click', function(event) {
+                let gstRates = [];
+                let gstRateName = [];
+                $(".gstrateCheck:checked").each(function() {
+                    gstRates.push($(this).data('id'));
+                    gstRateName.push($(this).data('name'));
+                });
+                if (gstRates.length <= 0) {
+                    $("#modal-delete-selected-error").modal('show');
+                } else {
+                    console.log(gstRates);
+                    $("#appendSelectedHtml").empty();
+                    let htmls = new Array();
+                    $.each(gstRateName, function(index, options) {
+                        htmls.push('<strong> Rate Name #: </strong>' + options + '<br />')
+                    })
+                    $("#selectedArrayValue").val(gstRates);
+                    $("#appendSelectedHtml").append(htmls);
+                    $("#modal-delete-selected").modal('show');
+                }
+            });
+
+            $('.deleteById').on('click', function(event) {
+                let id = $(this).data('id');
+                let name = $(this).data('name');
+                console.log(name);
+                $("#appendSelectedHtmlDeleteById").empty();
+                let htmls = '<strong> Name #: </strong>' + name + '<br />';
+                $("#gstRateDeleteById").val(id);
+                $("#appendSelectedHtmlDeleteById").append(htmls);
+                $("#modal-delete-by-id").modal('show');
+            });
+
+            $('.update_gstrate').click(function(event) {
+                let index = $(".update_gstrate").index(this);
+                let modalId = $(".update_gstrate").eq(index).data('id');
+                event.preventDefault();
+                $.ajax({
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    url: base_url + '/admin/gst_rate_update',
+                    type: 'POST',
+                    data: $("#gstrate_update_form-" + modalId).serialize(),
+                    success: function(data) {
+                        location.reload();
+                        /*if (data.status == 200) {
+                            $('.disableBtn-' + modalId).attr("disabled", 'disabled');
+                            $('#modal-edit-gstrate-' + modalId).modal('hide');
+                            $('#successMessageWrap').show();
+                            //$('#successMessageWrap').text(data.message);
+
+                        }
+                        if (data.status == 404) {
+                            $('#modal-edit-gstrate-' + modalId).modal('hide');
+                            //$('#errorMessage').text(data.message);
+                            $('#errorMessageWrap').show();
+                        }*/
+                    },
+                    error: function(response) {
+                        $('#statusUpdate').html(response.responseJSON.status);
+                        $('#nameUpdate').html(response.responseJSON.name);
+                        $('#rateUpdate').html(response.responseJSON.rate);
+                    }
+                });
+            });
+            $('#receiveSuccessPdfModal').modal({
+                backdrop: 'static',
+                keyboard: false
+            })
+        });
+    </script>
+@endsection

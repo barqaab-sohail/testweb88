@@ -1,0 +1,235 @@
+<?php $currentURL = url()->current();
+$baseURL= url('/');
+$basePath=str_replace($baseURL, '', $currentURL);
+//$total_price = 0;
+?>
+@extends('layouts.frontend_layout')
+@section('title','My Order History | Webqom Technologies')
+@section('content')
+@section('page_header','Services')
+
+
+<!-- end page title -->
+<div class="clearfix">
+  <div class="page_title1 sty9">
+    <div class="container">
+      <h1>Orders</h1>
+      <div class="pagenation">&nbsp;<a href="{{url('/')}}">Home</a> <i>/</i> <a href="{{url('/client_area_home')}}">Dashboard</a> <i>/</i> Orders <i>/</i> My Order History</div>
+    </div>
+  </div>
+</div>
+
+<div class="clearfix"></div>
+<div class="clearfix margin_bottom5"></div>
+
+ <div class="one_full stcode_title9">
+        <h1 class="caps"><strong>My Order History </strong>     </h1>
+    </div>
+
+<div class="clearfix"></div>
+
+
+<div class="content_fullwidth">
+
+    <div class="container">
+        
+        <div class="one_fourth_less">
+            <h4>Status Filter</h4>
+            <div class="list-group">
+                <a href="#" class="list-group-item active">All Orders<span class="badge badge-dark pull-right">2</span></a>
+                <a href="#" class="list-group-item caps">Paid<span class="badge badge-success pull-right">1</span></a>
+                <a href="#" class="list-group-item caps">Payment Failed<span class="badge badge-danger pull-right">1</span></a>
+            </div>
+            note to programmer: when clicked, filter the table on the right by status and only showed the filtered data. 
+            
+            <h4>Client Area</h4>
+             <ul class="list-group">
+                <li class="list-group-item"><h5 class="white">Quick Links</h5></li>
+                <li class="list-group-item"><a href="client_area_home.html"><i class="fa fa-caret-right"></i> Dashboard</a></li>
+                <li class="list-group-item alt"><h5>Products/Services</h5></li>
+                <li class="list-group-item"><a href="services_my_services.html"><i class="fa fa-caret-right"></i> My Services Listing</a></li>
+                
+                <li class="list-group-item alt"><h5>Orders</h5></li>
+                <li class="list-group-item"><a href="order_history_list.html"><i class="fa fa-caret-right"></i> My Order History</a></li>
+                
+                <li class="list-group-item alt"><h5>Domains</h5></li>
+                <li class="list-group-item"><a href="domain_my_domains.html"><i class="fa fa-caret-right"></i> My Domains</a></li>
+                <li class="list-group-item"><a href="domain_domain_renewal.html"><i class="fa fa-caret-right"></i> Renew Domains</a></li>
+                <li class="list-group-item"><a href="domain_register_new_login.html"><i class="fa fa-caret-right"></i> Register a New Domain</a></li>
+                <li class="list-group-item"><a href="domain_transfer_login.html"><i class="fa fa-caret-right"></i> Transfer Domains to Us</a></li>
+                <li class="list-group-item"><a href="domain_search_login.html"><i class="fa fa-caret-right"></i> Domain Search</a></li>
+                
+                <li class="list-group-item alt"><h5>Billing</h5></li>
+                <li class="list-group-item"><a href="billing_my_invoices.html"><i class="fa fa-caret-right"></i> My Invoices</a></li>
+                <li class="list-group-item"><a href="billing_my_quotes.html"><i class="fa fa-caret-right"></i> My Quotes</a></li>
+                <li class="list-group-item"><a href="billing_mass_payment.html"><i class="fa fa-caret-right"></i> Make Payment / Mass Payment</a></li>
+                <li class="list-group-item alt"><h5>Support</h5></li>
+                <li class="list-group-item"><a href="support_my_support_tickets.html"><i class="fa fa-caret-right"></i> My Support Tickets</a></li>
+                <li class="list-group-item"><a href="support_open_new_ticket.html"><i class="fa fa-caret-right"></i> Open New Ticket</a></li>
+                
+                <li class="list-group-item alt"><h5>My Account</h5></li>
+                <li class="list-group-item"><a href="account_edit.html"><i class="fa fa-caret-right"></i> Edit Account Details</a></li>
+                <li class="list-group-item"><a href="account_edit.html#tab-2"><i class="fa fa-caret-right"></i> Change Password</a></li>
+  
+             </ul>
+
+        </div><!-- end section -->
+        
+        <div class="three_fourth_less last">
+        
+           <div class="text-18px dark light">Below you can view your order details &amp; track your order.</div>
+           <div class="clearfix margin_bottom1"></div>
+           
+           <div class="one_half_less">
+               <h4>Search</h4>
+               <div class="cforms aliright">
+                    <input type="text" id="name" placeholder="Search by Invoice #, Receipt # or Order Date">    
+                    <a href="#display the search result in below table" class="btn btn-danger caps"><i class="fa fa-search"></i> <b>Search</b></a>
+               </div><!-- end cforms -->
+           </div><!-- end one half less -->
+           <div class="clearfix"></div>
+           <div class="divider_line7"></div>
+           
+           <p class="aliright">{{$orders->total()}} record(s) found. Items {{($orders->currentpage()-1)*$orders->perpage()+1}}-{{$orders->currentpage()*$orders->perpage()}} out of {{$orders->total()}} displayed</p>  
+                @if(!empty($articles) && !$articles->isEmpty())
+                <div class="table-responsive">
+                
+                          <table class="table table-hover table-striped">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Invoice #</th>
+                                <th>Receipt #</th>
+                                <th>Order Date</th>
+                                <th>Total</th>
+                                <th>Payment</th>
+                                <th>Status</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+    
+                              
+                              <tr>
+                                <td colspan="8">No records found.</td> 
+                              </tr>
+                              
+                            </tbody>
+                            <tfoot>
+                              <tr>
+                                <td colspan="8"></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                          <div class="clearfix"></div>
+                          
+                </div>
+                @else
+                <div class="table-responsive">
+            
+                      <table class="table table-hover table-striped">
+                        <thead>
+                          <tr>
+                            <th><span class="pull-left">#</span> <a href="#sort by #" class="pull-right white"><i class="fa fa-sort"></i></a></th>      
+                            <th><span class="pull-left">Invoice #</span> <a href="#sort by invoice #" class="pull-right white"><i class="fa fa-sort"></i></a></th>
+                            <th><span class="pull-left">Receipt #</span> <a href="#sort by receipt #" class="pull-right white"><i class="fa fa-sort"></i></a></th>
+                            <th><span class="pull-left">Order Date</span> <a href="#sort by order date" class="pull-right white"><i class="fa fa-sort"></i></a></th>                            
+                            <th><span class="pull-left">Total</span> <a href="#sort by total" class="pull-right white"><i class="fa fa-sort"></i></a></th>                  
+                            <th><span class="pull-left">Payment</span> <a href="#sort by next payment" class="pull-right white"><i class="fa fa-sort"></i></a></th> 
+                            <th><span class="pull-left">Status</span> <a href="#sort by status" class="pull-right white"><i class="fa fa-sort"></i></a></th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                            @php $i = 1; @endphp
+                          @foreach($orders as  $key => $value)
+                          <tr>
+                            <td>{{$i++}}</td>
+                            <td>MY-{{$value->transaction_id}}</td>
+                            <td>{{$value->id}}</td>
+                            <td>{{$value->created_at}}</td> 
+                            <td>RM {{$value->total_amount}}</td>    
+                            <td>PayPal</td> 
+                            <td><a href="order_details.html">
+                            @if($value->status == 'COMPLETED')
+                            <span class="label label-success caps">Paid</span>
+                            @else
+                            <span class="label label-danger caps">Payment Failed</span>
+                            @endif
+                            </a></td>
+                          </tr>
+                          @endforeach
+                          <!-- <tr>
+                            <td>1</td>
+                            <td>MY-7974188</td>
+                            <td>1431979860</td>
+                            <td>16th Apr 2015</td> 
+                            <td>RM 26,406.54</td>    
+                            <td>PayPal</td> 
+                            <td><a href="order_details.html"><span class="label label-success caps">Paid</span></a></td>
+                            <td class="alicent"><a href="order_details.html" data-hover="tooltip" data-placement="top" title="View Details"><i class="fa fa-search red"></i></a></td>
+                          </tr>
+                          <tr>
+                            <td>2</td>
+                            <td>MY-8001182</td>
+                            <td>-</td>
+                            <td>16th Apr 2015</td> 
+                            <td>RM 26,406.54</td>    
+                            <td>PayPal</td> 
+                            <td><a href="order_details.html"><span class="label label-danger caps">Payment Failed</span></a></td>
+                            <td class="alicent"><a href="order_details.html" data-hover="tooltip" data-placement="top" title="View Details"><i class="fa fa-search red"></i></a></td>
+                          </tr> -->
+                          
+                          
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colspan="8"></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                      <div class="clearfix"></div>
+
+                      @if ($orders->lastPage() > 1)
+                      <div class="pagination center">
+                        <b>Page {{ $orders->currentPage() }} of {{ $orders->lastPage() }}</b>
+
+                        <a href="{{ $orders->url($orders->currentPage()-1) }}" class="navlinks {{ ($orders->currentPage() == 1) ? ' disabled' : '' }}">&lt; Previous</a>
+
+                        @for ($i = 1; $i <= $orders->lastPage(); $i++)
+                          <a class="navlinks {{ ($orders->currentPage() == $i) ? ' current' : '' }}" href="{{ $orders->url($i) }}">{{ $i }}</a>
+                        @endfor
+
+                        <a href="{{ $orders->url($orders->currentPage()+1) }}" class="navlinks">Next ></a>
+                      </div>
+                      @endif
+                       <!-- <div class="pagination center">
+                        <b>Page 1 of 18</b>
+                        <a href="#" class="navlinks disabled">&lt; Previous</a>
+                            <a href="#" class="navlinks current">1</a>
+                            <a href="#" class="navlinks">2</a>
+                            <a href="#" class="navlinks">3</a>
+                            <a href="#" class="navlinks">4</a>
+                            <a href="#" class="navlinks">Next ></a>
+                      </div>  -->
+            </div>
+            @endif
+            <!-- end table responsive -->
+       
+       
+       </div><!-- end section -->
+        
+        
+
+        
+    </div>  
+    <!-- end container -->  
+    
+    
+    <div class="clearfix"></div>
+    
+    
+</div><!-- end content full width -->
+
+<div class="clearfix"></div>
+@endsection

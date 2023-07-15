@@ -1,0 +1,802 @@
+<?php $currentURL = url()->current();
+$baseURL = url('/');
+$basePath = str_replace($baseURL, '', $currentURL);
+$total_price = 0;
+$discount_price = 0.0;
+$servicePrice = 0;
+// dd($cartitems);
+?>
+@if (strpos($basePath, 'ecommerce') !== false)
+@include('frontend.ecommerce')
+@elseif(strpos($basePath, 'email88') !== false)
+@include('frontend.email88')
+@elseif(strpos($basePath, 'web88ir') !== false)
+@include('frontend.web88ir')
+@else
+@extends('layouts.frontend_layout')
+@section('title', 'Domains | - Webqom Technologies')
+@section('content')
+<div class="clearfix"></div>
+
+
+<div class="page_title1 sty9">
+    <div class="container">
+
+        <h1>Online Order</h1>
+
+        <div class="pagenation">&nbsp;
+            <a href="{{ url('/') }}">Home</a> <i>/</i>
+            @if (isset($info) && isset($page))
+            @if ($info != '' && $page != '')
+            <a href="{{ url('/dashboard') }}">Dashboard</a> <i>/</i>
+            <a href="{{ url('/my_account') }}">My Domains</a> <i>/</i>
+            <a href="{{ url('/domain_search_login') }}">Domain Search</a> <i>/</i>
+            <a href="{{ url('/domain_configuration') }}">Domain Configuration</a>
+
+            <i>/</i>
+            @endif
+            @endif
+            Shopping Cart
+            <!-- <i>/</i>  -->
+            <!--  <a href="domain_configuration_hosting.html">Choose a Domain</a> <i>/</i> Review &amp; Checkout -->
+        </div>
+
+        <div class="clearfix"></div>
+        <!--  note to programmer: breadcrumb is dynamic by the steps user clicks. -->
+
+    </div>
+</div><!-- end page title -->
+
+<div class="clearfix"></div>
+<div class="clearfix margin_bottom5"></div>
+
+<div class="one_full stcode_title9">
+    <h1 class="caps"><strong>Shopping Cart</strong></h1>
+    {{-- print_r( Session::get('cart')) --}}
+</div>
+
+<div class="clearfix"></div>
+<?php ?>
+<div class="content_fullwidth">
+    <div class="container">
+        @if (session('update_status') === false)
+        <div class="alert alert-danger alert-dismissable">
+            <button type="button" data-dismiss="alert" aria-hidden="true" class="close">&times;</button>
+            <i class="fa fa-times-circle"></i> <strong>Error!</strong>
+            <p>{{ session('update_message') }}</p>
+        </div>
+        @endif
+        <div class="three_full_less">
+            @if (count($cartitems) <= 0) <div class="alertymes4">
+                <h3 class="light"><i class="fa fa-warning"></i><strong>Your Shopping Cart is
+                        Empty.</strong></h3>
+                <div class="clearfix margin_bottom1"></div>
+                <a href="/" class="btn btn-danger caps"><i class="fa fa-shopping-cart"></i><b>Continue
+                        Shopping</b></a>
+        </div><!-- end section -->
+        @endif
+        <div class="clearfix margin_bottom3"></div>
+        @if (count($cartitems) > 0 || $server_configuration_details)
+        <div class="table-responsive">
+
+            <table class="table table-hover table-striped cart_item_table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Services</th>
+                        <th>Cycle</th>
+                        <th>Setup Fee</th>
+                        <th>Qty</th>
+                        <th>Price</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $setup_fees = 0; ?>
+                    @foreach ($cartitems as $key => $value)
+                    <?php $plan_details = App\Models\Plan::get_plan_details($value['plan_id']); ?>
+                    <?php $plan_details = json_decode(json_encode($plan_details));
+                        // dd($plan_details);
+                    ?>
+                    @if (!empty($plan_details))
+                    <?php
+                    $setup_fees  = $setup_fees + $plan_details->setup_fee_one_time;
+                    // $main_price = number_format((float) $plan_details->price_annually + $plan_details->setup_fee_one_time, 2, '.', '');
+                    $main_price = $value['price'] + @$value['domain_price'];
+                    // $domain_price = number_format((float) $value['price'] - ($plan_details->price_annually + $plan_details->setup_fee_one_time), 2, '.', '');
+                    $domain_price = @$value['domain_price'] * $value['domain_cycle'];
+                    $discount = App\Models\Promotion::get_discount($value['plan_id']);
+                    if ($discount != null) {
+                        $discount = json_decode(json_encode($discount));
+
+                        if ($discount->discount_by == 'amount') {
+                            $discount = $discount->discount;
+                        } else {
+                            $discount = ($value['price'] * $discount->discount) / 100;
+                        }
+                    } else {
+                        $discount = 0.0;
+                    }
+                    ?>
+                    @else
+                    <?php
+                    $main_price = $value['price'];
+                    $domain_price = 0;
+                    $discount = 0.0;
+                    ?>
+                    @endif
+                    <tr data-id="{{ isset($value['id']) ? $value['id'] : $value['services'] }}">
+                        <?php
+                        // $value['cycle'] & $value['qty'] Added by Rejohn
+                        if (empty($plan_details)) {
+                            $cycle = 1;
+                        } else {
+                            $cycle = $value['cycle'];
+                        }
+                        if (empty(@$value['domain_price'])) {
+                            $row_price = $value['price'] * $cycle * $value['qty'];
+                        } else {
+                            $row_price = ($value['price'] * $cycle * $value['qty']) + $domain_price;
+                        }
+                        ?>
+                        <td>{{ $key + 1 }}</td>
+                        <td>
+                            <div class="pull-left">
+                                @if ($value['type'] == 2)
+                                <?php
+                                $url = url('/pricelist') . '/' . $value['services'];
+                                $text = '<a href = "' . $url . '" target="_blank">Transfer</a>';
+                                ?>
+                                @else
+                                <?php $text = 'Registration'; ?>
+                                @endif
+                                <!-- <b>Service Code: </b> <span class="sitecolor">DN</span><br/> -->
+                                @if (!empty($plan_details))
+                                <b>Service Code: </b> <span class="sitecolor">{{ !empty($plan_details->service_code) ? $plan_details->service_code : '' }}</span><br />
+                                <b>Hosting Plan:</b> <span class="sitecolor caps">{{ !empty($plan_details->plan_name) ? $plan_details->plan_name : '' }}
+                                    {{ $page }}</span><br />
+                                @endif
+                                <?php if (isset($value['addons']) && $value['addons'] != "" && $value['addons'] != null) {
+                                    $addons_vl = explode(',', $value['addons']);
+                                ?>
+                                    <b>Domain <?php echo $text; ?>:</b> <span class="sitecolor">{{ $value['services'] }}</span><br />
+                                    <b>Domain Addons:</b>
+                                    <ul>
+                                        @foreach ($addons_vl as $addon)
+                                        @foreach ($domain_pricings as $dprice)
+                                        <?php
+                                        if ($addon == $dprice->id) {
+                                            $row_price += $dprice->price;
+                                        ?>
+                                            <li><i class="fa icon-arrow-right"></i>{{ $dprice->title }}
+                                                (RM
+                                                {{ number_format($dprice->price ? $dprice->price : '0', 2) }})
+                                            </li>
+                                        <?php }
+                                        ?>
+                                        @endforeach
+                                        @endforeach
+                                    </ul>
+                                <?php } ?>
+                                @if (!empty($plan_details))
+                                <b>Server Specification:</b>
+                                <ul>
+                                    @php
+                                    $total_break = 2;
+                                    $featured_plans = App\Models\PlanFeature::where('page', $plan_details->page)
+                                    ->where('status', 1)
+                                    ->get();
+                                    @endphp
+                                    @if (!empty($featured_plans) && count($featured_plans) > 0)
+                                    @foreach ($featured_plans as $i)
+                                    @php
+                                    $details = App\Models\PlanFeatureDetail::where('plan_feature_id', $i->id)
+                                    ->where('plan_id', $value['plan_id'])
+                                    ->first();
+
+
+                                    @endphp
+                                    @if ($details)
+                                    <?php $total_break++; ?>
+                                    @if($details->plan_feature_id == 138 || $details->plan_feature_id == 143 )
+                                    <li><i class="fa icon-arrow-right"></i>&nbsp;&nbsp;{{ $i->title }}:
+                                        <span data-sel="{{ $i->title }}">@if($details->select_yes_no == 'yes')<i class="fa fa-check sitecolor"></i> @else <i class="fa fa-times red"></i> @endif</span>
+                                    </li>
+                                    @else
+                                    <li><i class="fa icon-arrow-right"></i>&nbsp;&nbsp;{{ $i->title }}:
+                                        <span data-sel="{{ $i->title }}">{{ $details->description }}</span>
+                                    </li>
+                                    @endif
+                                    @endif
+                                    @endforeach
+                                    @endif
+                                </ul>
+                                @endif
+                                @if (!((isset($value['addons']) && $value['addons'] != "" && $value['addons'] != null)))
+                                <b>Domain <?php echo $text; ?>:</b> <span class="sitecolor">{{ $value['services'] }}</span><br />
+                                @endif
+                            </div>
+                        </td>
+                        <td style="width: 200px;">
+                            <div class="input-group year_input_group" style="display: none;">
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <input type="number" name="update_year_value" class="form-control year_form" min="1">
+                                    <input type="hidden" name="domain_name" class="form-control year_domain">
+                                </div>
+                                <div>
+                                    <button class="btn btn-success yearUpdateBtn" type="button">Update</button>
+                                    <button class="btn btn-danger yearCancelBtn" type="button">Cancel</button>
+                                </div>
+                                <div class="year_form_error" style="color: red"></div>
+                            </div>
+                            @if ($main_price != $value['price'])
+                            <div class="input-group domain_cycle_input_group" style="display: none;">
+                                <?php for ($t = 0; $t <= $total_break; $t++) {
+                                    echo '<br/>';
+                                } ?>
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <input type="number" name="update_domain_cycle_value" class="form-control domain_cycle_form" min="1">
+                                    <input type="hidden" name="update_domain_cycle_domain_name" class="form-control domain_cycle_domain">
+                                </div>
+                                <div>
+                                    <button class="btn btn-success domainUpdateBtn" type="button">Update</button>
+                                    <button class="btn btn-danger domainCancelBtn" type="button">Cancel</button>
+                                </div>
+                                <div class="domain_cycle_form_error" style="color: red"></div>
+                            </div>
+                            @endif
+
+                            <div class="year_value_wrap @if ($main_price != $value['price']) domain_cycle_value_wrap @endif">
+                                <div class="pull-left">
+                                    @if (!empty($plan_details))
+                                    <?php if ($main_price != $value['price']) {  ?>
+                                        <span class="year_value">{{ $value['cycle'] }}</span>
+                                        <?php if ($value['cycle'] == 1) {
+                                            echo 'year';
+                                        } else {
+                                            echo 'years';
+                                        } ?><br />
+                                        <?php for ($t = 0; $t <= $total_break; $t++) {
+                                            echo '<br/>';
+                                        } ?>
+                                        <span class="domain_year_value">{{ $value['domain_cycle'] }}</span>
+                                        <?php if ($value['domain_cycle'] == 1) {
+                                            echo 'year';
+                                        } else {
+                                            echo 'years';
+                                        } ?>
+                                    <?php } else { ?>
+                                        <span class="year_value">{{ $value['cycle'] }}</span>
+                                        <?php if ($value['cycle'] == 1) {
+                                            echo 'year';
+                                        } else {
+                                            echo 'years';
+                                        } ?>
+
+                                    <?php } ?>
+                                    @else
+                                    @if (!empty($value['cycle']))
+                                    <?php $cycle = $value['cycle']; ?>
+                                    @else
+                                    <?php $cycle = 1; ?>
+                                    @endif
+                                    <span class="year_value">{{ $cycle }}</span>
+                                        <?php if ($cycle == 1) {
+                                            echo 'year';
+                                        } else {
+                                            echo 'years';
+                                        } ?> <br />
+                                    @endif
+                                </div>
+                            </div>
+                            @if ($main_price != $value['price'])
+                            <div class="pull-right">
+                                <a href="javascript:void(0)" class="year_edit_icon" data-hover="tooltip" data-year="{{ isset($value['id']) ? $value['id'] : $value['services'] }}" data-placement="top" title="Edit"><i class="fa fa-pencil sitecolor"></i></a><br />
+                                <?php for ($t = 0; $t <= $total_break; $t++) {
+                                    echo '<br/>';
+                                } ?>
+                                <a href="javascript:void(0)" class="domain_cycle_edit_icon" data-hover="tooltip" data-year="{{ isset($value['id']) ? $value['id'] : $value['services'] }}" data-placement="top" title="Edit"><i class="fa fa-pencil sitecolor"></i></a>
+                            </div>
+                            @else
+                            <div class="pull-right">
+                                <a href="javascript:void(0)" class="year_edit_icon" data-hover="tooltip" data-year="{{ isset($value['id']) ? $value['id'] : $value['services'] }}" data-placement="top" title="Edit">
+                                    <i class="fa fa-pencil sitecolor"></i>
+                                </a>
+                            </div>
+                            @endif
+                        </td>
+                        <td>{{$plan_details ? $plan_details->setup_fee_one_time : ''}}</td>
+                        <td style="width: 200px;">
+                            <div class="input-group qty_input_group" style="display: none;">
+                                <div class="form-group" style="margin-bottom: 5px;">
+                                    <input type="number" name="update_qty_value" class="form-control qty_form" min="1">
+                                    <input type="hidden" name="domain_name" class="form-control qty_domain">
+                                </div>
+                                <div>
+                                    <button class="btn btn-success qtyUpdateBtn" type="button">Update</button>
+                                    <button class="btn btn-danger qtyCancelBtn" type="button">Cancel</button>
+                                </div>
+                                <div class="qty_form_error" style="color: red"></div>
+                            </div>
+                            <div class="qty_value_wrap">
+                                @if ($main_price != $value['price'])
+                                <?php
+                                /**
+                                 * commit by Rejohn
+                                 */
+                                // <span class="qty_value">{{$value['qty']}}</span><br /> {{$value['qty']}}
+                                ?>
+                                <span class="qty_value">{{ $value['qty'] }}</span>
+                                @else
+                                <span class="qty_value">{{ $value['qty'] }}</span>
+                                @endif
+
+                                @if ($main_price != $value['price'])
+                                @else
+                                <div class="pull-right">
+                                    <div class="pull-right"><a href="javascript:void(0)" class="qty_edit_icon" data-hover="tooltip" data-qty="{{ isset($value['id']) ? $value['id'] : $value['services'] }}" data-placement="top" title="Edit"><i class="fa fa-pencil sitecolor"></i></a></div><br>
+                                </div>
+                                @endif
+
+                                <br />
+                                <?php
+                                if (isset($value['addons']) && $value['addons'] != "" && $value['addons'] != null) {
+                                    $addons_vl = explode(',', $value['addons']);
+                                ?>
+                                    <br/>
+                                    <ul>
+                                        @foreach ($addons_vl as $addon)
+                                        @foreach ($domain_pricings as $dprice)
+                                        <?php if ($addon == $dprice->id) { ?>
+                                            <li>1</li>
+                                        <?php } ?>
+                                        @endforeach
+                                        @endforeach
+                                    </ul>
+                                <?php } ?>
+
+                                @if ($main_price != $value['price'])
+                                <?php for ($t = 0; $t <= $total_break; $t++) {
+                                    echo '<br/>';
+                                } ?>
+                                <span class="qty_value">{{ $value['qty'] }}</span>
+                                @endif
+                            </div>
+                        </td>
+                        <?php
+
+
+                        ?>
+                        <td>
+                            {{-- {{var_dump($plan_details)}} --}}
+                            @if (!empty($plan_details))
+                            <?php
+                            // $domain_price = number_format((float)$value['price'] - ($plan_details->price_annually + $plan_details->setup_fee_one_time), 2, '.', '');
+
+                            if ($main_price != $value['price']) { ?>
+                                RM
+                                {{ number_format($value['price']  * $value['cycle'] * $value['qty'], 2) }}<br>
+                                <?php for ($t = 0; $t <= $total_break; $t++) {
+                                    echo '<br/>';
+                                } ?>
+                                RM
+                                {{ number_format($domain_price * $value['qty'], 2) }}
+                            <?php } else {
+                            ?>
+
+                                RM
+                                {{-- {{ number_format($value['price'] ? $value['price'] * $value['cycle'] * $value['qty'] : '0', 2) }} --}}
+                                @if($value['cycle'] == 1)
+                                    {{ number_format($plan_details->price_annually * $value['qty'],2) }}
+                                @elseif($value['cycle'] == 2)
+                                    {{ number_format($plan_details->price_biennially * $value['qty'],2) }}
+                                @elseif($value['cycle'] == 3)
+                                    {{ number_format($plan_details->price_triennially * $value['qty'],2) }}
+                                @else
+                                {{ number_format($plan_details->price_annually * $value['cycle'] * $value['qty'],2) }}
+                                @endif
+                                <br>
+                            <?php } ?>
+                            @else
+                            RM
+                            {{ number_format($value['price'] ? $value['price'] : '0', 2) }}<br>
+                            @endif
+                            <div>
+                                <br />
+                                <?php if (isset($value['addons']) && $value['addons'] != "" && $value['addons'] != null) {
+                                    $addons_vl = explode(',', $value['addons']); ?>
+                                    <ul>
+                                        @foreach ($addons_vl as $addon)
+                                        @foreach ($domain_pricings as $dprice)
+                                        <?php if ($addon == $dprice->id) { ?>
+                                            <li class="price_list">RM
+                                                {{ number_format($dprice->price ? $dprice->price : '0', 2) }}
+                                            </li>
+                                        <?php } ?>
+                                        @endforeach
+                                        @endforeach
+                                    </ul>
+                                <?php } ?>
+                            </div>
+                            <!-- RM 684.00 -->
+                        </td>
+                        <td class="alicent"><a href="#" data-hover="tooltip" data-placement="top" title="Remove Item" class="remove_single_item"><i class="fa fa-times red"></i></a></td>
+                    </tr>
+
+                    <?php
+                    $total_price += $row_price;
+                    $total_price += $setup_fees;
+                    $discount_price += $discount;
+                    ?>
+                    @endforeach
+                    <?php
+                    $grand_total = $total_price   - $discount_price;
+                    ?>
+                    @if (!is_null($server_configuration_details) && isset($server_configuration_details->dedicated_service_code))
+                    <tr>
+                        <td>6</td>
+                        <td>
+                            <div class="pull-left">
+                                <b>Service Code: </b> <span class="sitecolor">{{ $server_configuration_details->dedicated_service_code }}</span><br />
+                                <b>Dedicated Server Plan:</b> <span class="sitecolor caps">{{ $server_configuration_details->dedicated_server_plan }}</span>
+                                {{-- <span class="red">(FREE Setup)</span> --}}
+                                {{-- <br/> --}}
+                                <b>Domain:</b> <span class="sitecolor">{{ $domain }}</span><br />
+                                <b>Setup Fee:</b> <span class="red">RM
+                                    {{ $server_configuration_details->initial_setup_price }}</span><br />
+                                <b>Server Configuration:</b>
+                                <ul>
+                                    <li><i class="fa icon-arrow-right"></i> CPU: 1 x 4-cores Intel Xeon
+                                    </li>
+                                    <li><i class="fa icon-arrow-right"></i> No. of Processors:
+                                        {{ $server_configuration_details->Processors }} processor
+                                    </li>
+                                    <li><i class="fa icon-arrow-right"></i> RAM:
+                                        {{ $server_configuration_details->RAM }}GB
+                                    </li>
+                                    {{-- <li><i class="fa icon-arrow-right"></i> Hard Disk: 2 x 1TB SATA</li> --}}
+                                    {{-- <li><i class="fa icon-arrow-right"></i> No. of IP addresses (IPv4): 1 x IPv4 Address</li> --}}
+                                    {{-- <li><i class="fa icon-arrow-right"></i> Bandwidth: 10Mbps</li> --}}
+                                    <li><i class="fa icon-arrow-right"></i> Control Panel:
+                                        {{ $server_configuration_details->Control_Panel }}
+                                    </li>
+                                    {{-- <li><i class="fa icon-arrow-right"></i> Fully Managed Server: Optional</li> --}}
+                                </ul>
+                            </div>
+                            <div class="pull-right"><a href="#" data-hover="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil sitecolor"></i></a></div>
+                        </td>
+                        <td>
+                            <div class="pull-left">1 year(s)</div>
+                            <div class="pull-right"><a href="#" data-hover="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil sitecolor"></i></a></div>
+                        </td>
+                        <td>
+                            <div class="pull-left">1</div>
+                            <div class="pull-right"><a href="#" data-hover="tooltip" data-placement="top" title="Edit"><i class="fa fa-pencil sitecolor"></i></a></div>
+                        </td>
+                        <td>RM {{ $server_configuration_details->sub_total }}</td>
+                        <td class="alicent"><a href="#" data-hover="tooltip" data-placement="top" title="Remove Item"><i class="fa fa-times red"></i></a></td>
+                    </tr>
+                    @endif
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6" class="aliright">
+                            <a href="#" class="btn btn-sm btn-default caps empty_cart"><i class="fa fa-trash"></i> <b>Empty Cart</b></a>
+
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="clearfix"></div>
+
+        </div>
+        @endif
+
+        @if (count($cartitems) > 0)
+        <div class="one_half_less">
+            <div class="alertymes7">
+                <h4>Apply Promo Code</h4>
+                <div class="cforms alileft">
+                    <div id="form_status"></div>
+                    <form type="POST" id="gsr-contact" onSubmit="return valid_datas( this );">
+                        <input type="text" id="promocode" name="promocode" placeholder="Enter promo code if you have one...">
+                        <a href="#" class="btn btn-sm btn-info caps"><i class="fa fa-trash"></i>
+                            <b>Validate Code</b></a>
+                    </form>
+                </div>
+            </div>
+        </div><!-- end one half less -->
+
+        <div class="one_half_less last">
+            <div class="alertymes7">
+                <h2 class="aliright">Order Summary</h2>
+                <div class="pull-left caps"><b>Subtotal</b></div>
+                <div class="pull-right"><b>RM
+                        {{ number_format($total_price ? $total_price : '0', 2) }}</b></div>
+                <div class="clearfix"></div>
+                <div class="pull-left caps red"><b>Discount</b></div>
+                <div class="pull-right red"><b>- RM {{ number_format($discount_price, 2) }}</b></div>
+                <!-- <div class="pull-left caps red"><b>Discount (Promo Code: Test123)</b></div>
+                                     <div class="pull-right red"><b>- RM 0.00</b></div> -->
+                <div class="clearfix"></div>
+                <div class="pull-left caps"><b>GST (6%)</b></div>
+                <div class="pull-right"><b>RM 0.00</b></div>
+                <div class="divider_line"></div>
+                <div class="clearfix margin_bottom2"></div>
+                <h2 class="red aliright" style="margin-bottom: 0px;"><b>RM
+                        {{ number_format($grand_total ? $grand_total  : '0', 2) }}</b></h2><span class="pull-right red caps aliright">Total</span>
+                <div class="clearfix margin_bottom2"></div>
+                <a href="#" class="btn btn-default caps pull-left"><i class="fa fa-shopping-cart"></i>
+                    <b>Continue Shopping</b></a>
+
+                {!! Form::open(['route' => 'frontend.checkout_login']) !!}
+
+                <input type="hidden" name="total_price" value="{{round($grand_total, 2) }}">
+                <input type="hidden" name="discount" value="{{$discount_price }}">
+
+                {{ Form::button('<i class="fa fa-lg fa-arrow-circle-right"></i> <b>Checkout</b>', ['type' => 'submit', 'class' => 'btn btn-lg btn-danger caps pull-right']) }}
+
+                {!! Form::close() !!}
+
+            </div>
+        </div><!-- end one half less last -->
+        @endif
+
+
+
+
+    </div><!-- end section -->
+
+
+
+</div>
+</div><!-- end content fullwidth -->
+
+<div class="clearfix"></div>
+<div class="divider_line"></div>
+
+<div class="clearfix"></div>
+
+
+<a href="#" class="scrollup">Scroll</a><!-- end scroll to top of the page-->
+
+@section('custom_scripts')
+<script>
+    //smoothScroll.init();
+    $(document).ready(function() {
+        //$('.menu-link').menuFullpage();
+        $(document).on('click', '.empty_cart', function(event) {
+            event.preventDefault();
+            var pdpArr = [];
+            $('.cart_item_table tbody tr').each(function() {
+                pdpArr.push($(this).data('id'));
+            });
+
+            if (pdpArr.length > 0) {
+                $.ajax({
+                        url: base_url + '/empty_cart',
+                        type: 'POST',
+                        data: {
+                            '_token': csrf_token,
+                            'ids': pdpArr
+                        }
+
+                    })
+                    .done(function(response) {
+                        console.log(response);
+                        if (response.success == true) {
+                            toastr.success(response.errors.message, 'Success');
+                            location.reload();
+                        } else {
+                            toastr.success(response.errors.message, 'Error');
+                        }
+                    })
+                    .fail(function() {
+                        console.log("error");
+                    })
+                    .always(function() {
+                        console.log("complete");
+                    });
+            }
+        });
+
+        $(document).on('click', '.remove_single_item', function(event) {
+            event.preventDefault();
+            var pdpArr = $(this).parent().parent('tr').data('id');
+            console.log(pdpArr)
+
+            $.ajax({
+                    url: base_url + '/empty_cart',
+                    type: 'POST',
+                    data: {
+                        '_token': csrf_token,
+                        'id': pdpArr
+                    }
+
+                })
+                .done(function(response) {
+                    console.log(response);
+                    if (response.success == true) {
+                        toastr.success(response.errors.message, 'Success');
+                        location.reload();
+                    } else {
+                        toastr.success(response.errors.message, 'Error');
+                    }
+                })
+                .fail(function() {
+                    console.log("error");
+                })
+                .always(function() {
+                    console.log("complete");
+                });
+        });
+
+    });
+
+    $(document).ready(function() {
+        $(document).on('click', '.year_edit_icon', function() {
+            let index = $(".year_edit_icon").index(this);
+            let yearDomain = $(".year_edit_icon").eq(index).data('year');
+            let yearValue = $('.year_value').eq(index).text();
+            $('.year_value_wrap').eq(index).css('display', 'none');
+            $('.qty_edit_icon').eq(index).css('display', 'none');
+            $('.year_form').eq(index).val(yearValue);
+            $('.year_domain').eq(index).val(yearDomain);
+            $('.year_input_group').eq(index).css('display', 'block');
+        });
+
+        $(document).on('click', '.yearCancelBtn', function() {
+            let index = $(".yearCancelBtn").index(this);
+            $('.year_value_wrap').eq(index).css('display', 'block');
+            $('.qty_edit_icon').eq(index).css('display', 'block');
+            $('.year_input_group').eq(index).css('display', 'none');
+        });
+
+        $(document).on('click', '.yearUpdateBtn', function() {
+            let index = $(".yearUpdateBtn").index(this);
+            let year = $('.year_form').eq(index).val();
+            let domain = $('.year_domain').eq(index).val();
+            if (year < 1) {
+                text = "Please Enter Valid Number or Try Again";
+                $('.year_form_error').eq(index).text(text);
+            } else {
+                $.ajax({
+                        url: base_url + '/update_cart',
+                        type: 'POST',
+                        data: {
+                            '_token': csrf_token,
+                            'update_field': 'year',
+                            'year': year,
+                            'domain': domain
+                        },
+                    })
+                    .done(function(response) {
+                        console.log(response);
+                        if (response.success == true) {
+                            toastr.success(response.errors.message, 'Success');
+                            location.reload();
+                        } else {
+                            toastr.success(response.errors.message, 'Error');
+                        }
+                    })
+                    .fail(function() {
+                        console.log("error");
+                    })
+                    .always(function() {
+                        console.log("complete");
+                    });
+            }
+        });
+
+        $(document).on('click', '.qty_edit_icon', function() {
+            let index = $(".qty_edit_icon").index(this);
+            let qtyDomain = $(".qty_edit_icon").eq(index).data('qty');
+            let qtyValue = $('.qty_value').eq(index).text();
+            $('.qty_value_wrap').eq(index).css('display', 'none');
+            $('.qty_form').eq(index).val(qtyValue);
+            $('.qty_domain').eq(index).val(qtyDomain);
+            $('.qty_input_group').eq(index).css('display', 'block');
+        });
+
+        $(document).on('click', '.qtyCancelBtn', function() {
+            let index = $(".qtyCancelBtn").index(this);
+            $('.qty_value_wrap').eq(index).css('display', 'block');
+            $('.qty_input_group').eq(index).css('display', 'none');
+        });
+
+        $(document).on('click', '.qtyUpdateBtn', function() {
+            let index = $(".qtyUpdateBtn").index(this);
+            let qty = $('.qty_form').eq(index).val();
+            let domain = $('.qty_domain').eq(index).val();
+            if (qty < 1) {
+                text = "Please Enter Valid Number or Try Again";
+                $('.qty_form_error').eq(index).text(text);
+            } else {
+                $.ajax({
+                        url: base_url + '/update_cart',
+                        type: 'POST',
+                        data: {
+                            '_token': csrf_token,
+                            'update_field': 'quantity',
+                            'quantity': qty,
+                            'domain': domain
+                        },
+                    })
+                    .done(function(response) {
+                        console.log(response);
+                        if (response.success == true) {
+                            toastr.success(response.errors.message, 'Success');
+                            location.reload();
+                        } else {
+                            toastr.success(response.errors.message, 'Error');
+                        }
+                    })
+                    .fail(function() {
+                        console.log("error");
+                    })
+                    .always(function() {
+                        console.log("complete");
+                    });
+            }
+        });
+
+        $(document).on('click', '.domain_cycle_edit_icon', function() {
+            let index = $(".domain_cycle_edit_icon").index(this);
+            let yearDomain = $(".domain_cycle_edit_icon").eq(index).data('year');
+            let yearValue = $('.domain_year_value').eq(index).text();
+            $('.domain_cycle_value_wrap').eq(index).css('display', 'none');
+            $('.qty_edit_icon').eq(index).css('display', 'none');
+            $('.domain_cycle_form').eq(index).val(yearValue);
+            $('.domain_cycle_domain').eq(index).val(yearDomain);
+            $('.domain_cycle_input_group').eq(index).css('display', 'block');
+        });
+
+        $(document).on('click', '.domainCancelBtn', function() {
+            let index = $(".domainCancelBtn").index(this);
+            $('.domain_cycle_value_wrap').eq(index).css('display', 'block');
+            $('.qty_edit_icon').eq(index).css('display', 'block');
+            $('.domain_cycle_input_group').eq(index).css('display', 'none');
+        });
+
+        $(document).on('click', '.domainUpdateBtn', function() {
+            let index = $(".domainUpdateBtn").index(this);
+            let year = $('.domain_cycle_form').eq(index).val();
+            let domain = $('.domain_cycle_domain').eq(index).val();
+            if (year < 1) {
+                text = "Please Enter Valid Number or Try Again";
+                $('.domain_cycle_form_error').eq(index).text(text);
+            } else {
+                $.ajax({
+                        url: base_url + '/update_cart',
+                        type: 'POST',
+                        data: {
+                            '_token': csrf_token,
+                            'update_field': 'domain_cycle',
+                            'year': year,
+                            'domain': domain
+                        },
+                    })
+                    .done(function(response) {
+                        console.log(response);
+                        if (response.success == true) {
+                            toastr.success(response.errors.message, 'Success');
+                            location.reload();
+                        } else {
+                            toastr.success(response.errors.message, 'Error');
+                        }
+                    })
+                    .fail(function() {
+                        console.log("error");
+                    })
+                    .always(function() {
+                        console.log("complete");
+                    });
+            }
+        });
+
+    })
+</script>
+@endsection
+@endsection
+@endif

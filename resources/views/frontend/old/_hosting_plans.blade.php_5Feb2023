@@ -1,0 +1,424 @@
+
+<table>
+    <tr>
+        <td class="first rowfirst">
+            <div class="title">
+                <div class="arrow_box">
+                    <h5>All {{ $page_name }} Features</h5>
+                    <h3 class="caps">Choose Your Plan</h3>
+                </div>
+            </div>
+        </td>
+        {{-- {{dd($plans)}} --}}
+        @if (!empty($plans))
+            @foreach ($plans as $i)
+
+
+                <td class="rowsremain @if (strtolower($i->sort_order) == '2' && $i->promo_behaviour != 'none') center @endif ">
+                    <div class="prices">
+                        
+                        @if (strtolower($i->sort_order) == '2' && $i->promo_behaviour != 'none')
+                            <h3><span>{{ $i->promo_behaviour == 'other' ? $i->promo_behaviour_other : $i->promo_behaviour }}</span>
+                            </h3>
+                        @endif
+                        <h2 class="caps @if (strtolower($i->sort_order) == '2' && $i->promo_behaviour != 'none') white @endif ">{{ $i->plan_name }}</h2>
+                        @if ($i->price_type == 'Recurring')
+                        @if($i->hide_on_mobile == 1)
+                            <strong ><i>RM</i>{{ $i->price_monthly or '0' }}<i>/mo</i></strong>
+                            @endif
+                            <!--@php list($whole, $decimal) = explode('.', number_format($i->price_monthly, 2, '.', '00')  ); @endphp
+    <strong><i>RM</i>{{ $whole or '0' }}<i>.{{ $decimal }}/mo</i></strong>-->
+                        @endif
+                        @if ($i->price_type == 'One Time'  )
+                            <!--@php list($whole, $decimal) = explode('.', number_format($i->price_monthly, 2, '.', '00')); @endphp
+    <strong><i>RM</i>{{ $whole or '0' }}<i>.{{ $decimal }}/mo</i></strong>-->
+    @if($i->hide_on_mobile == 1)
+                            <strong><i>RM</i>{{ number_format($i->price_one_time + $i->setup_fee_one_time, 2) }}</strong>
+                            @endif
+                        @endif
+                        @if ($i->price_type == 'Free')
+                        @if($i->hide_on_mobile == 1)
+                            <strong>Free</strong>
+                            @endif
+                        @endif
+                        <b></b>
+                        @if ($i->enable_plan_button == 'Order Now')
+                            @if (Request::path() == 'services/dedicated_servers')
+                            @if(!empty(request('domain')))
+                                <a
+                                    href="{{ route('configDedicate') }}?id={{ $i->id }}&search_domain={{request('domain')}}">{{ $i->enable_plan_button }}</a>
+                            @else
+                            <a
+                                    href="{{ route('configDedicate') }}?id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                            @endif
+                            @else
+                            @if(!empty(request('domain')))
+                            <a
+                                    href="/domain_configuration_hosting?search_domain={{request('domain')}}&url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                            @else
+                                <a
+                                    href="/domain_configuration_hosting?url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                            @endif
+                            @endif
+                        @elseif ($i->enable_plan_button == 'Ask for Quote')
+                            <a href="javascript:showModel()">{{ $i->enable_plan_button }}</a>
+                        @elseif ($i->enable_plan_button == 'other')
+                            @if (Request::path() == 'services/dedicated_servers')
+                              @if(!empty(request('domain')))
+                                <a
+                                    href="{{ route('configDedicate') }}?search_domain={{request('domain')}}&id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                              @else
+                              <a
+                                    href="{{ route('configDedicate') }}?id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                              @endif
+                            @else
+                              @if(!empty(request('domain')))
+                              <a
+                                    href="/domain_configuration_hosting?search_domain={{request('domain')}}&url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                              @else
+                                <a
+                                    href="/domain_configuration_hosting?url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                               @endif
+
+                            @endif
+                        @else
+                            <a href="javascript:void(0)">{{ $i->enable_plan_button }}</a>
+                        @endif
+                        <!--
+							@if ($i->enable_plan_button != 'other')
+							@if ($i->id != 19)
+								@if (in_array($i->id, [14, 20]))
+								<a href="{{ route('configDedicate') }}?id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+								@else
+								<a href="javascript:void(0)">{{ $i->enable_plan_button }}</a>
+								@endif
+								@else
+								<a href="javascript:showModel()">{{ $i->enable_plan_button }}</a>
+								@endif
+								@else
+								@if (Request::path() == 'services/dedicated_servers')
+								<a data-target="#modal-enquire" data-toggle="modal" href="#">{{ $i->enable_plan_button_other }}</a>
+								@else
+								<a href="javascript:void(0)">{{ $i->enable_plan_button_other }}</a>
+								@endif
+							@endif
+
+
+
+						@ if($i->enable_plan_button!='other')
+						@ if($i->id !=19)
+						@ if(in_array($i->id, [14,20]))
+						<a href="{{ route('configDedicate') }}?id={{ $i->id }}">{ {$i->enable_plan_button}}</a>
+						@ else
+						<a href="javascript:void(0)">{ {$i->enable_plan_button}}</a>
+						@ endif
+						@ else
+						<a href="javascript:showModel()">{ {$i->enable_plan_button}}</a>
+						@ endif
+						@ else
+						@ if(Request::path() == 'services/dedicated_servers')
+						<a data-target="#modal-enquire" data-toggle="modal" href="#">{{ $i->enable_plan_button_other }}</a>
+						@ else
+						<a href="javascript:void(0)">{ {$i->enable_plan_button_other}}</a>
+						@ endif
+						@ endif
+						-->
+                    </div>
+                </td>
+            @endforeach
+        @endif
+    </tr>
+    @if ($service_free_domains)
+        <tr>
+            <th class="alileft">Free domain</th>
+                @for ($d = 0; $d<= 2; $d++)
+                    @if (isset($plans[$d]))
+            <th>
+                @php
+                    $free_domain = App\Models\ServicesFreeDomain::where('plan_id', $plans[$d]->id)->first();
+                    $type = '';
+                    $fee = '';
+                    $tldValues = [];
+                    $offer_line = '';
+                    if ($free_domain) {
+                        $type = $free_domain->type;
+                        $fee = $free_domain->fee;
+                    
+                        if ($type !== '1') {
+                            $tlds_array = unserialize($free_domain->tlds);
+                            foreach ($tlds_array as $j) {
+                                $domain_pricing = App\Models\DomainPricing::find($j);
+                    
+                                if ($domain_pricing) {
+                                    if ($type === '2' || $type === '3') {
+                                        $offer_line = $type == '2' ? ' Offer a free domain registration/transfer only (renew as normal)' : ' Offer a discounted domain registration/transfer only (renew as normal):';
+                                        $tlds = '';
+                                        $tlds = App\Models\DomainPricingList::where('domain_pricing_id', $domain_pricing->id)
+                                            ->whereIn('type', ['new', 'transfer'])
+                                            ->where('status', 1)
+                                            ->get();
+                                    }
+                    
+                                    if ($type === '4') {
+                                        $offer_line = ' Offer a free domain registration/transfer and free renewal (if product is renewed)';
+                                        $tlds = '';
+                                        $tlds = App\Models\DomainPricingList::where('domain_pricing_id', $domain_pricing->id)
+                                            ->where('status', 1)
+                                            ->get();
+                                    }
+                    
+                                    foreach ($tlds as $tld) {
+                                        $tldValues[] = $tld->tld;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    $tldValues = implode(' / ', array_unique($tldValues));
+                @endphp
+                {!! $tldValues ?: '<i class="fa fa-times red"></i>' !!}
+                <p><span class="red"> {!! !empty($offer_line) ? $offer_line : '' !!}</span></p>
+                @if ($type === '3')
+                    <p><span class="red">Sale</span>. First Year just <span class="red">RM
+                            {{ $fee }} </span></p>
+                @endif
+            </th>
+    @endif
+    @endfor
+    </tr>
+    @endif
+    @if (count($featured_plans) > 0 && count($plans) > 0)
+        @foreach ($featured_plans as $f)
+            <tr>
+                <td class="alileft">{{ $f->title }}</td>
+                @for ($j = 0; $j < 3; $j++)
+                    @if (isset($plans[$j]))
+                        <td>
+                            @php
+                                $details = App\Models\PlanFeatureDetail::where('plan_feature_id', $f->id)
+                                    ->where('plan_id', $plans[$j]->id)
+                                    ->first();
+                            @endphp
+                            @if ($details)
+                                @if ($details->select_yes_no === 'yes')
+                                    <i class="fa fa-check sitecolor"></i>
+                                @elseif($details->select_yes_no === 'no')
+                                    <i class="fa fa-times red"></i>
+                                @endif
+                                {{ $details->description }}
+                            @else
+                                <i class="fa fa-times red"></i>
+                            @endif
+                        </td>
+                    @endif
+                @endfor
+            </tr>
+        @endforeach
+    @endif
+    @if (!empty($plans))
+    @if(@$i->hide_on_mobile == 1)
+
+        <tr>
+            <th class="alileft">Setup Fee</th>
+            @foreach ($plans as $plan)
+                <th>
+                    @if ($plan->setup_fee_one_time == '0' || $plan->price_type == 'Free')
+                        <i class="fa fa-check sitecolor"></i>
+                    @else
+                        RM {{ $plan->setup_fee_one_time }}
+                    @endif
+                </th>
+            @endforeach
+        </tr>
+
+        <tr>
+            <td class="alileft text-red">One Time Fee</td>
+            @foreach ($plans as $plan)
+                <td class="text-red">
+                    @if ($plan->price_one_time == '0' || $plan->price_one_time == '' || $plan->price_type == 'Free')
+                        <i class="fa fa-times red"></i>
+                    @else
+						@if ($plan->price_type == 'One Time')
+							RM {{ $plan->price_one_time }}
+						@else
+							<i class="fa fa-times red"></i>
+						@endif
+                        
+                    @endif
+                </td>
+            @endforeach
+        </tr>
+
+        <tr>
+            <th class="alileft text-red">First Month</th>
+            @foreach ($plans as $plan)
+                <th class="text-red">
+                    @if ($plan->recurring_first_month == '0' || $plan->recurring_first_month == '' || $plan->price_type == 'Free')
+                        <i class="fa fa-times red"></i>
+                    @else
+						@if ($plan->price_type == 'Recurring' || $plan->price_type == 'Free')
+							RM {{ $plan->recurring_first_month }} / mth
+						@else
+							<i class="fa fa-times red"></i>
+						@endif
+                        
+                    @endif
+                </th>
+            @endforeach
+        </tr>
+        <tr>
+            <td class="alileft text-red">First Year</td>
+            @foreach ($plans as $plan)
+                <td class="text-red">
+                    @if ($plan->recurring_first_year == '0' || $plan->recurring_first_year == '' || $plan->price_type == 'Free')
+                        <i class="fa fa-times red"></i>
+                    @else
+						@if ($plan->price_type == 'Recurring' || $plan->price_type == 'Free')
+							RM {{ $plan->recurring_first_year }} / yr
+						@else
+							<i class="fa fa-times red"></i>
+						@endif
+                        
+                    @endif
+                </td>
+            @endforeach
+        </tr>
+        <tr>
+            <th class="alileft text-red">Price (Annually)</th>
+            @foreach ($plans as $plan)
+                <th class="text-red">
+                    @if ($plan->price_annually == '0' || $plan->price_annually == '' || $plan->price_type == 'Free')
+                        <i class="fa fa-times red"></i>
+                    @else
+						@if ($plan->price_type == 'Recurring' || $plan->price_type == 'Free')
+							RM {{ $plan->price_annually }} / yr
+						@else
+							<i class="fa fa-times red"></i>
+						@endif
+                    @endif
+                </th>
+            @endforeach
+        </tr>
+        <tr>
+            <td class="alileft text-red">Price (Biennially)</td>
+            @foreach ($plans as $plan)
+                <td class="text-red">
+                    @if ($plan->price_biennially == '0' || $plan->price_biennially == '' || $plan->price_type == 'Free')
+                        <i class="fa fa-times red"></i>
+                    @else
+						@if ($plan->price_type == 'Recurring' || $plan->price_type == 'Free')
+							RM {{ $plan->price_biennially }} / 2 yrs
+						@else
+                            <i class="fa fa-times red"></i>
+                        @endif
+                    @endif
+                </td>
+            @endforeach
+        </tr>
+        <tr>
+            <th class=" text-red alileft">Price (Triennially)</th>
+            @foreach ($plans as $plan)
+                <th class="text-red">
+                    @if ($plan->price_triennially == '0' || $plan->price_triennially == '' || $plan->price_type == 'Free')
+                        <i class="fa fa-times red"></i>
+                    @else
+                        @if ($plan->price_type == 'Recurring' || $plan->price_type == 'Free')
+                            RM {{ $plan->price_triennially }} / 3 yrs
+                        @else
+                            <i class="fa fa-times red"></i>
+                        @endif
+                    @endif
+                </th>
+            @endforeach
+        </tr>
+    @endif
+    @endif
+    <tr>
+        <td class="first rowfirst"></td>
+        @if (!empty($plans))
+            @foreach ($plans as $i)
+
+
+                <td class="rowsremain  @if (strtolower($i->sort_order) == '2' && $i->promo_behaviour != 'none') center @endif">
+                    <div class="prices">
+                       @if($i->hide_on_mobile == 1 )
+                        @if ($i->price_type == 'Recurring')
+                            <strong><i>RM</i>{{ $i->price_monthly or '0' }}<i>/mo</i></strong>
+                        @endif
+                        @if ($i->price_type == 'One Time')
+                            <strong><i>RM</i>{{ number_format($i->price_one_time + $i->setup_fee_one_time, 2) }}</strong>
+                        @endif
+                        @if ($i->price_type == 'Free')
+                            <strong>Free</strong>
+                        @endif
+                        @endif
+                        <b></b>
+                        <!-- @if ($i->enable_plan_button != 'other')
+						@if ($i->id != 19)
+							@if (in_array($i->id, [14, 20]))
+							<a href="{{ route('configDedicate') }}?id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+							@else
+							<a href="javascript:void(0)">{{ $i->enable_plan_button }}</a>
+							@endif
+							@else
+							<a href="javascript:showModel()">{{ $i->enable_plan_button }}</a>
+							@endif
+							@elseif ($i->enable_plan_button == 'Ask for Quote')
+							<a href="javascript:showModel()">{{ $i->enable_plan_button }}</a>
+							@else
+							<a href="javascript:void(0)">{{ $i->enable_plan_button }}</a>
+						@endif -->
+                        @if ($i->enable_plan_button == 'Order Now')
+                            @if (Request::path() == 'services/dedicated_servers')
+                               @if(!empty(request('domain')))
+                                <a
+                                    href="{{ route('configDedicate') }}?search_domain={{request('domain')}}&id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                                @else
+                                <a
+                                    href="{{ route('configDedicate') }}?id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                                @endif
+                            @else
+                              @if(!empty(request('domain')))
+                              <a
+                                    href="/domain_configuration_hosting?search_domain={{request('domain')}}&url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                              @else
+                                <a
+                                    href="/domain_configuration_hosting?url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button }}</a>
+                                @endif
+                            @endif
+                        @elseif ($i->enable_plan_button == 'Ask for Quote')
+                            <a href="javascript:showModel()">{{ $i->enable_plan_button }}</a>
+                        @elseif ($i->enable_plan_button == 'other')
+                            @if (Request::path() == 'services/dedicated_servers')
+                              @if(!empty(request('domain')))
+                                <a
+                                    href="{{ route('configDedicate') }}?search_domain={{request('domain')}}&id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                              @else
+                              <a
+                                    href="{{ route('configDedicate') }}?id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                              @endif
+                            @else
+                            @if(!empty(request('domain')))
+                            <a
+                                    href="/domain_configuration_hosting?search_domain={{request('domain')}}&url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                            @else
+                                <a
+                                    href="/domain_configuration_hosting?url={{ Request::segment(2) }}&amp;name={{ $page_name }}&amp;id={{ $i->id }}">{{ $i->enable_plan_button_other }}</a>
+                            @endif
+                            @endif
+                        @else
+                            <a href="javascript:void(0)">{{ $i->enable_plan_button }}</a>
+                        @endif
+                    </div>
+                </td>
+            @endforeach
+        @endif
+        <!-- <td class="rowsremain center">
+			<div class="prices">
+				<strong><i>RM</i>80<i>.00/mo</i></strong> <b></b>
+				<a data-target="#modal-enquire" data-toggle="modal" href="#">Order Now</a>
+			</div>
+		</td> -->
+    </tr>
+</table>
+@include('frontend._ask_quota')
